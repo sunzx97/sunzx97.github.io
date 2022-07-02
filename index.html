@@ -6,9 +6,13 @@
     <link rel="stylesheet" type="text/css" href="./index.css">
 </head>
 <body>
-    <h1>sunzx的个人主页</h1>
-    <h1>Hello ~</h1>
-    <div id="test">测试</div>
+    <section id="szx_contact_info"></section>
     <script type="text/javascript" src="./index.js"></script>
+    <script type="text/javascript" src="./jquery-3.6.0.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $("#szx_contact_info").load("contact_info.html")
+        });
+    </script>
 </body>
 </html>
