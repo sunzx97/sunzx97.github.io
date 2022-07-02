@@ -1,3 +1,6 @@
-#test{
-    background-color: red;
+#main-content{
+    display: flex;
+}
+#szx-contact-info{
+    width: 200px;
 }
