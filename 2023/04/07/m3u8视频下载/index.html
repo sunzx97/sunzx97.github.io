@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>m3u8视频下载 | sunzx&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="本文介绍如何HLS协议相关知识。 HLS协议HLS（HTTP Live Streaming）是一种基于http协议的流媒体网络传输协议，很多视频都是通过该协议传输，主要原理就是将视频切分为很多片段，通过一个索引文件m3u8对切分后的视频ts片段进行检索。 关于m3u8中字段的意义如下：    #EXTM3U 指明这是一个m3u8文件   #EXT-X-TARGETDURATION:10 指明每个片">
+<meta property="og:type" content="article">
+<meta property="og:title" content="m3u8视频下载">
+<meta property="og:url" content="http://example.com/2023/04/07/m3u8%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD/index.html">
+<meta property="og:site_name" content="sunzx&#39;s blog">
+<meta property="og:description" content="本文介绍如何HLS协议相关知识。 HLS协议HLS（HTTP Live Streaming）是一种基于http协议的流媒体网络传输协议，很多视频都是通过该协议传输，主要原理就是将视频切分为很多片段，通过一个索引文件m3u8对切分后的视频ts片段进行检索。 关于m3u8中字段的意义如下：    #EXTM3U 指明这是一个m3u8文件   #EXT-X-TARGETDURATION:10 指明每个片">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/hls_fra.png">
+<meta property="article:published_time" content="2023-04-07T12:07:15.000Z">
+<meta property="article:modified_time" content="2023-04-09T14:50:06.290Z">
+<meta property="article:author" content="sunzx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/hls_fra.png">
+  
+    <link rel="alternate" href="/atom.xml" title="sunzx's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">sunzx&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-m3u8视频下载" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/04/07/m3u8%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD/" class="article-date">
+  <time class="dt-published" datetime="2023-04-07T12:07:15.000Z" itemprop="datePublished">2023-04-07</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      m3u8视频下载
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>本文介绍如何HLS协议相关知识。</p>
+<h2 id="HLS协议"><a href="#HLS协议" class="headerlink" title="HLS协议"></a>HLS协议</h2><p>HLS（HTTP Live Streaming）是一种基于http协议的流媒体网络传输协议，很多视频都是通过该协议传输，主要原理就是将视频切分为很多片段，通过一个索引文件m3u8对切分后的视频ts片段进行检索。<br><img src="/../images/hls_fra.png"></p>
+<p>关于m3u8中字段的意义如下：</p>
+<p>   #EXTM3U 指明这是一个m3u8文件<br>   #EXT-X-TARGETDURATION:10 指明每个片段最多10s</p>
+<p>   #EXTINF:9.009,<br>   <a target="_blank" rel="noopener" href="http://media.example.com/first.ts">http://media.example.com/first.ts</a>  指明片段地址以及片段时长<br>   #EXTINF:9.009,<br>   <a target="_blank" rel="noopener" href="http://media.example.com/second.ts">http://media.example.com/second.ts</a><br>   #EXTINF:3.003,<br>   <a target="_blank" rel="noopener" href="http://media.example.com/third.ts">http://media.example.com/third.ts</a></p>
+<p>以下为更详细的字段</p>
+<p>#EXTM3U:每个M3U文件第一行必须是这个tag标识。(简单了解)</p>
+<p>#EXT-X-VERSION:版本，此属性可用可不用。(简单了解)</p>
+<p>#EXT-X-TARGETDURATION:目标持续时间，是用来定义每个TS的【最大】duration（持续时间）。(简单了解)</p>
+<p>#EXT-X-ALLOW-CACHE是否允许允许高速缓存。(简单了解)</p>
+<p>#EXT-X-MEDIA-SEQUENCE定义当前M3U8文件中第一个文件的序列号，每个ts文件在M3U8文件中都有固定唯一的序列号。(简单了解)</p>
+<p>#EXT-X-DISCONTINUITY:播放器重新初始化(简单了解)</p>
+<p>#EXT-X-KEY定义加密方式，用来加密的密钥文件key的URL，加密方法（例如AES-128），以及IV加密向量。（记住）</p>
+<p>#EXTINF:指定每个媒体段(ts文件)的持续时间，这个仅对其后面的TS链接有效，每两个媒体段(ts文件)间被这个tag分隔开。(简单了解)</p>
+<p>#EXT-X-ENDLIST表明M3U8文件的结束。(简单了解)</p>
+<h2 id="python实现基于HLS的流媒体文件获取"><a href="#python实现基于HLS的流媒体文件获取" class="headerlink" title="python实现基于HLS的流媒体文件获取"></a>python实现基于HLS的流媒体文件获取</h2><p>由HLS协议的原理可知，解析HLS文件先要找到m3u8索引文件，然后获取视频片段进行拼接。<br>解析m3u8文件可以根据一些开源库或开源代码，这里贴一些在网上找的代码，仅作参考。</p>
+<h3 id="示例一"><a href="#示例一" class="headerlink" title="示例一"></a>示例一</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> urllib.parse <span class="keyword">import</span> urljoin</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> asyncio</span><br><span class="line"><span class="keyword">import</span> aiohttp</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用Crypto 包 中的AES 对加密的ts片段进行解密，通过 pycryptodome 库安装Crypto包，如果安装后还是报找不到该包，找到安装包的位置将小写的cryto改成Crypto</span></span><br><span class="line"><span class="comment"># pip install pycryptodome</span></span><br><span class="line"><span class="keyword">from</span> Crypto.Cipher <span class="keyword">import</span> AES</span><br><span class="line">dirName = <span class="string">&#x27;tsLib&#x27;</span></span><br><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(dirName):</span><br><span class="line">    os.mkdir(dirName)</span><br><span class="line"></span><br><span class="line">headers = &#123;</span><br><span class="line"><span class="string">&#x27;user-agent&#x27;</span>: <span class="string">&#x27;Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 一级m3u8地址</span></span><br><span class="line">m1_url = <span class="string">&#x27;https://v4.cdtlas.com/20220311/xEaAxRVd/index.m3u8&#x27;</span></span><br><span class="line"><span class="comment"># 由于HLS 是基于 HTTP的，所以直接requests.get</span></span><br><span class="line">m1_page_text = requests.get(url=m1_url,headers=headers).text</span><br><span class="line"></span><br><span class="line"><span class="comment"># print(m1_page_text)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 从一级m3u8文件中解析出二级m3u8地址</span></span><br><span class="line">m1_page_text = m1_page_text.strip() <span class="comment">#取出收尾的回车</span></span><br><span class="line"><span class="comment"># 二级m3u8地址</span></span><br><span class="line">m2_url = <span class="string">&#x27;&#x27;</span></span><br><span class="line"><span class="keyword">for</span> line  <span class="keyword">in</span> m1_page_text.split(<span class="string">&#x27;\n&#x27;</span>):</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> line.startswith(<span class="string">&#x27;#&#x27;</span>):</span><br><span class="line"></span><br><span class="line">        m2_url = line</span><br><span class="line">        <span class="comment"># 将m1_url 和m2_url不同之处补充到m2_url中</span></span><br><span class="line">        m2_url = urljoin(m1_url,m2_url)</span><br><span class="line">        <span class="comment"># 至此就获取到了完整的二级文件地址</span></span><br><span class="line"><span class="comment"># 请求链接地址</span></span><br><span class="line"><span class="comment"># print(m2_url)</span></span><br><span class="line"><span class="comment"># 请求二级文件地址内容</span></span><br><span class="line">m2_page_text = requests.get(url=m2_url,headers=headers).text</span><br><span class="line">m2_page_text = m2_page_text.strip()</span><br><span class="line"><span class="comment"># print(m2_page_text) # 打印输出整个.ts文件</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 解析出解密秘钥key的地址</span></span><br><span class="line">key_url = re.findall(<span class="string">&#x27;URI=&quot;(.*?)&quot;&#x27;</span>,m2_page_text,re.S)[<span class="number">0</span>]</span><br><span class="line">key_url =urljoin(m1_url,key_url)</span><br><span class="line"><span class="comment"># print(key_url) # 打印请求链接地址 https://iqiyi.shanshanku.com/20211104/6AoEDjLD/1200kb/hls/key.key</span></span><br><span class="line"><span class="comment"># 请求key的地址，获取知秘钥</span></span><br><span class="line">    <span class="comment"># 注意： key和iv需要为bytes类型</span></span><br><span class="line">key = requests.get(url=key_url,headers=headers).content</span><br><span class="line">iv = <span class="string">b&#x27;0000000000000000&#x27;</span></span><br><span class="line"><span class="comment"># print(key) # 得到解密密钥</span></span><br><span class="line"><span class="comment"># 解析出每一个ts切片的地址</span></span><br><span class="line">ts_url_list = []</span><br><span class="line"><span class="keyword">for</span> line <span class="keyword">in</span> m2_page_text.split(<span class="string">&#x27;\n&#x27;</span>):</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> line.startswith(<span class="string">&quot;#&quot;</span>):</span><br><span class="line">        ts_url = line</span><br><span class="line">        ts_url = urljoin(m1_url,ts_url)</span><br><span class="line">        ts_url_list.append(ts_url)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># print(ts_url_list) # 列表组成的逗号分隔的.ts文件</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 异步请求到每一个ts切片的数据</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">def</span> <span class="title function_">get_ts</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="keyword">async</span> <span class="keyword">with</span> aiohttp.ClientSession() <span class="keyword">as</span> sess:</span><br><span class="line">        <span class="keyword">async</span> <span class="keyword">with</span> <span class="keyword">await</span> sess.get(url=url,headers=headers) <span class="keyword">as</span> response:</span><br><span class="line">            ts_data = <span class="keyword">await</span> response.read() <span class="comment"># 获取byte形式的响应数据</span></span><br><span class="line">            <span class="comment"># 需要对ts片段数据进行解密（需要用到key和iv）</span></span><br><span class="line">            aes = AES.new(key=key, mode=AES.MODE_CBC, iv=iv)</span><br><span class="line">            desc_data = aes.decrypt(ts_data)  <span class="comment"># 获取了解密后的数据</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> [desc_data,url]</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">download</span>(<span class="params">t</span>):</span><br><span class="line">    r_list = t.result()</span><br><span class="line">    data =r_list[<span class="number">0</span>]</span><br><span class="line">    url = r_list[<span class="number">1</span>] <span class="comment"># ts文件的地址</span></span><br><span class="line">    ts_name = url.split(<span class="string">&#x27;/&#x27;</span>)[-<span class="number">1</span>]</span><br><span class="line">    ts_path = dirName + <span class="string">&#x27;/&#x27;</span> + ts_name</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(ts_path, <span class="string">&#x27;wb&#x27;</span>) <span class="keyword">as</span> fp:</span><br><span class="line">        <span class="comment"># 需要将解密后的数据写入文件进行保存</span></span><br><span class="line">        fp.write(data)</span><br><span class="line">    <span class="built_in">print</span>(ts_name, <span class="string">&#x27;下载保存成功！&#x27;</span>)</span><br><span class="line"></span><br><span class="line">tasks = []</span><br><span class="line"><span class="keyword">for</span> url <span class="keyword">in</span> ts_url_list:</span><br><span class="line">    c = get_ts(url)</span><br><span class="line">    task = asyncio.ensure_future(c)</span><br><span class="line">    task.add_done_callback(download)</span><br><span class="line">    tasks.append(task)</span><br><span class="line">loop = asyncio.get_event_loop()</span><br><span class="line">loop.run_until_complete(asyncio.wait(tasks))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="示例二"><a href="#示例二" class="headerlink" title="示例二"></a>示例二</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">from</span> Crypto.Cipher <span class="keyword">import</span> AES</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">headers = &#123;</span><br><span class="line">                <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36 Edg/86.0.622.56&quot;</span>,</span><br><span class="line">                <span class="string">&quot;Connection&quot;</span>: <span class="string">&quot;close&quot;</span></span><br><span class="line">                &#125;</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">m3u8</span>(<span class="params">url,movie_name</span>):</span><br><span class="line">    base_url = url[:url.rfind(<span class="string">&#x27;/&#x27;</span>)+<span class="number">1</span>]<span class="comment">#用于拼接url</span></span><br><span class="line">    rs = requests.get(url,headers=headers).text</span><br><span class="line">    list_content = rs.split(<span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">    player_list = []</span><br><span class="line">    <span class="comment">#创建文件夹，用于存放ts文件</span></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(<span class="string">&#x27;&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(movie_name)):</span><br><span class="line">        <span class="comment">#os.system(&#x27;mkdir merge&#x27;)</span></span><br><span class="line">        os.mkdir(<span class="string">&#x27;&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(movie_name))</span><br><span class="line">    key = <span class="string">&#x27;&#x27;</span></span><br><span class="line">    <span class="keyword">for</span> index,line <span class="keyword">in</span> <span class="built_in">enumerate</span>(list_content):</span><br><span class="line">        <span class="comment"># 判断视频是否经过AES-128加密</span></span><br><span class="line">        <span class="keyword">if</span> <span class="string">&quot;#EXT-X-KEY&quot;</span> <span class="keyword">in</span> line:</span><br><span class="line">            method_pos = line.find(<span class="string">&quot;METHOD&quot;</span>)</span><br><span class="line">            comma_pos = line.find(<span class="string">&quot;,&quot;</span>)</span><br><span class="line">            method = line[method_pos:comma_pos].split(<span class="string">&#x27;=&#x27;</span>)[<span class="number">1</span>]<span class="comment">#获取加密方式</span></span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;Decode Method：&quot;</span>, method)</span><br><span class="line">            uri_pos = line.find(<span class="string">&quot;URI&quot;</span>)</span><br><span class="line">            quotation_mark_pos = line.rfind(<span class="string">&#x27;&quot;&#x27;</span>)</span><br><span class="line">            key_path = line[uri_pos:quotation_mark_pos].split(<span class="string">&#x27;&quot;&#x27;</span>)[<span class="number">1</span>]</span><br><span class="line">            key_url = key_path</span><br><span class="line">            res = requests.get(key_url,headers=headers)</span><br><span class="line">            key = res.content   <span class="comment">#获取加密密钥</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">#print(&quot;key：&quot;, key)</span></span><br><span class="line"></span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        获取.ts文件链接地址方式可根据需要进行定制</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">if</span> <span class="string">&#x27;#EXTINF&#x27;</span> <span class="keyword">in</span> line:</span><br><span class="line">            <span class="comment"># 获取每一媒体序列的.ts文件链接地址</span></span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;http&#x27;</span> <span class="keyword">in</span> list_content[index + <span class="number">1</span>]:</span><br><span class="line">                href = list_content[index + <span class="number">1</span>]</span><br><span class="line">                player_list.append(href)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                href = base_url + list_content[index+<span class="number">1</span>]</span><br><span class="line">                player_list.append(href)</span><br><span class="line">    <span class="keyword">if</span>(<span class="built_in">len</span>(key)):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;此视频经过加密&#x27;</span>)</span><br><span class="line">        <span class="comment">#print(player_list)#打印ts地址列表</span></span><br><span class="line">        <span class="keyword">for</span> i,j <span class="keyword">in</span> <span class="built_in">enumerate</span>(player_list):</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(<span class="string">&#x27;&#123;&#125;/&#x27;</span>.<span class="built_in">format</span>(movie_name + <span class="built_in">str</span>(i+<span class="number">1</span>) + <span class="string">&#x27;.ts&#x27;</span>)):</span><br><span class="line">                cryptor = AES.new(key, AES.MODE_CBC, key)</span><br><span class="line">                res = requests.get(j,headers=headers)</span><br><span class="line">                requests.adapters.DEFAULT_RETRIES = <span class="number">5</span></span><br><span class="line">                <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&#x27;&#123;&#125;/&#x27;</span>.<span class="built_in">format</span>(movie_name) + <span class="built_in">str</span>(i+<span class="number">1</span>) + <span class="string">&#x27;.ts&#x27;</span>,<span class="string">&#x27;wb&#x27;</span>) <span class="keyword">as</span> file:</span><br><span class="line">                    file.write(cryptor.decrypt(res.content))<span class="comment">#将解密后的视频写入文件</span></span><br><span class="line">                    <span class="built_in">print</span>(<span class="string">&#x27;正在写入第&#123;&#125;个文件&#x27;</span>.<span class="built_in">format</span>(i+<span class="number">1</span>))</span><br><span class="line">                    <span class="comment">#time.sleep(5)</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="comment">#print(i)</span></span><br><span class="line">                <span class="keyword">pass</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;此视频未加密&#x27;</span>)</span><br><span class="line">        <span class="comment">#print(player_list)#打印ts地址列表</span></span><br><span class="line">        <span class="keyword">for</span> i,j <span class="keyword">in</span> <span class="built_in">enumerate</span>(player_list):</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(<span class="string">&#x27;&#123;&#125;/&#x27;</span>.<span class="built_in">format</span>(movie_name + <span class="built_in">str</span>(i+<span class="number">1</span>) + <span class="string">&#x27;.ts&#x27;</span>)):</span><br><span class="line">                res = requests.get(j,headers=headers)</span><br><span class="line">                <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&#x27;&#123;&#125;/&#x27;</span>.<span class="built_in">format</span>(movie_name) + <span class="built_in">str</span>(i+<span class="number">1</span>) + <span class="string">&#x27;.ts&#x27;</span>,<span class="string">&#x27;wb&#x27;</span>) <span class="keyword">as</span> file:</span><br><span class="line">                    file.write(res.content)<span class="comment">#将解密后的视频写入文件</span></span><br><span class="line">                    <span class="built_in">print</span>(<span class="string">&#x27;正在写入第&#123;&#125;个文件&#x27;</span>.<span class="built_in">format</span>(i+<span class="number">1</span>))</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;下载完成&#x27;</span>)</span><br><span class="line"></span><br><span class="line">name = <span class="string">&#x27;nz&#x27;</span></span><br><span class="line">url = <span class="string">&quot;https://vod3.buycar5.cn/20210402/Z4mMbiNW/1000kb/hls/index.m3u8&quot;</span></span><br><span class="line">m3u8(url,name)</span><br></pre></td></tr></table></figure>
+
+<h3 id="示例三"><a href="#示例三" class="headerlink" title="示例三"></a>示例三</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 以下代码来源：https://blog.csdn.net/as604049322/article/details/118314130</span></span><br><span class="line"><span class="comment"># 原博客为 下载 B 站 实时视频</span></span><br><span class="line"><span class="comment"># 根据实际场景进行一定改写</span></span><br><span class="line"><span class="comment"># 其中 get_real_url 函数用于处理多层 m3u8 index 的情况，即嵌套 m3u8</span></span><br><span class="line"><span class="comment"># get_live_url 是针对 B站写的，没必要了解</span></span><br><span class="line"><span class="comment"># down_video 就是根据 m3u8链接下载视频，从代码来看就是用了一个循环，在考虑这样会不会出现掉帧的问题</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> m3u8</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line">headers = &#123;</span><br><span class="line">    <span class="string">&quot;User-Agent&quot;</span>: <span class="string">&quot;Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_live_url</span>(<span class="params">cid, platform=<span class="string">&#x27;h5&#x27;</span></span>):</span><br><span class="line">    playUrl = <span class="string">&#x27;https://api.live.bilibili.com/xlive/web-room/v1/playUrl/playUrl&#x27;</span></span><br><span class="line">    params = &#123;</span><br><span class="line">        <span class="string">&#x27;cid&#x27;</span>: cid,  <span class="comment"># cid序列号</span></span><br><span class="line">        <span class="string">&#x27;qn&#x27;</span>: <span class="number">150</span>,  <span class="comment"># 播放的视频质量</span></span><br><span class="line">        <span class="string">&#x27;platform&#x27;</span>: platform,  <span class="comment"># 视频的播放形式</span></span><br><span class="line">        <span class="string">&#x27;ptype&#x27;</span>: <span class="number">16</span></span><br><span class="line">    &#125;</span><br><span class="line">    response = requests.get(playUrl, headers=headers, params=params).json()</span><br><span class="line">    text = response[<span class="string">&#x27;data&#x27;</span>][<span class="string">&#x27;durl&#x27;</span>]</span><br><span class="line">    url = text[-<span class="number">1</span>][<span class="string">&#x27;url&#x27;</span>]</span><br><span class="line">    <span class="keyword">return</span> url</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_real_url</span>(<span class="params">url</span>):</span><br><span class="line">    playlist = m3u8.load(uri=url, headers=headers)</span><br><span class="line">    <span class="keyword">return</span> playlist.playlists[<span class="number">0</span>].absolute_uri</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">download_video</span>(<span class="params">url, max_count=<span class="number">1000</span>, max_size=<span class="number">120</span>*<span class="number">1024</span>*<span class="number">1024</span></span>):</span><br><span class="line">    max_id = <span class="literal">None</span></span><br><span class="line">    size = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, max_count+<span class="number">1</span>):</span><br><span class="line">        playlist = m3u8.load(uri=url, headers=headers)</span><br><span class="line">        <span class="keyword">for</span> seg <span class="keyword">in</span> playlist.segments:</span><br><span class="line">            current_id = <span class="built_in">int</span>(seg.uri[<span class="number">1</span>:seg.uri.find(<span class="string">&quot;.&quot;</span>)])</span><br><span class="line">            <span class="keyword">if</span> max_id <span class="keyword">and</span> current_id &lt;= max_id:</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;combine.mp4&quot;</span>, <span class="string">&quot;ab&quot;</span> <span class="keyword">if</span> max_id <span class="keyword">else</span> <span class="string">&quot;wb&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">                r = requests.get(seg.absolute_uri, headers=headers)</span><br><span class="line">                data = r.content</span><br><span class="line">                size += <span class="built_in">len</span>(data)</span><br><span class="line">                f.write(data)</span><br><span class="line">                <span class="built_in">print</span>(</span><br><span class="line">                    <span class="string">f&quot;\r下载次数(<span class="subst">&#123;i&#125;</span>/<span class="subst">&#123;max_count&#125;</span>)，已下载：<span class="subst">&#123;size/<span class="number">1024</span>/<span class="number">1024</span>:<span class="number">.2</span>f&#125;</span>MB&quot;</span>, end=<span class="string">&quot;&quot;</span>)</span><br><span class="line">                <span class="keyword">if</span> size &gt;= max_size:</span><br><span class="line">                    <span class="built_in">print</span>(<span class="string">&quot;\n文件已经超过大小限制，下载结束！&quot;</span>)</span><br><span class="line">                    <span class="keyword">return</span></span><br><span class="line">        max_id = current_id</span><br><span class="line">        time.sleep(<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">url = get_live_url(<span class="string">&#x27;22273117&#x27;</span>)</span><br><span class="line">real_url = get_real_url(url)</span><br><span class="line">download_video(real_url)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="示例四"><a href="#示例四" class="headerlink" title="示例四"></a>示例四</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 之前的文件 ts_download_online 是参照一个博客，针对的是b站直播视频的下载</span></span><br><span class="line"><span class="comment"># 把其应用到其他地方发现有一些问题，没有很好的进行去除重复视频的机制</span></span><br><span class="line"><span class="comment"># 在GitHub上找到一个其他的代码，思路可以借鉴</span></span><br><span class="line"><span class="comment"># 了解m3u8原理后进行改写也相对简单</span></span><br><span class="line"><span class="comment"># 以下代码源于：https://github.com/1chandan1/StreamDownload</span></span><br><span class="line"><span class="comment"># 核心思想就是添加一个数组保存已经下载好的url，然后每次下载之前都检查一下数组中是否已经有该url</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> time <span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> m3u8</span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">from</span> threading <span class="keyword">import</span> Thread</span><br><span class="line"></span><br><span class="line">check = []</span><br><span class="line">a = <span class="number">0</span></span><br><span class="line">stop = <span class="literal">False</span></span><br><span class="line">Vname = <span class="built_in">input</span>(<span class="string">&quot;Video name :&quot;</span>)</span><br><span class="line">url = <span class="built_in">input</span>(<span class="string">&quot;Enter the m3u8 link of the resolution that you want:&quot;</span>)</span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        r = requests.get(url)</span><br><span class="line">        m3u8_master = m3u8.loads(r.text)</span><br><span class="line">        m3u8_master.data[<span class="string">&#x27;playlists&#x27;</span>][-<span class="number">1</span>][<span class="string">&#x27;uri&#x27;</span>]</span><br><span class="line">        url = <span class="built_in">input</span>(</span><br><span class="line">            <span class="string">&quot;\nIt may be the master m3u8 link. Enter link of indivisual resolution which you want :\n&quot;</span></span><br><span class="line">        )</span><br><span class="line">        <span class="keyword">continue</span></span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        r = requests.get(url)</span><br><span class="line">        Playlist = m3u8.loads(r.text)</span><br><span class="line">        tsfile = Playlist.data[<span class="string">&#x27;segments&#x27;</span>]</span><br><span class="line">        <span class="keyword">if</span> tsfile == []:</span><br><span class="line">            url = <span class="built_in">input</span>(<span class="string">&quot;\nEnter correct Link :&quot;</span>)</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        url = <span class="built_in">input</span>(<span class="string">&quot;\nEnter correct Link :&quot;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;\nPress Enter to STOP\n&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">downLink</span>():</span><br><span class="line">    <span class="keyword">global</span> a, run</span><br><span class="line">    start = time()</span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        <span class="keyword">global</span> stop</span><br><span class="line">        <span class="keyword">if</span> stop:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\nSTOP&quot;</span>)</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        r = requests.get(url)</span><br><span class="line">        Playlist = m3u8.loads(r.text)</span><br><span class="line">        tsfile = Playlist.data[<span class="string">&#x27;segments&#x27;</span>]</span><br><span class="line">        <span class="keyword">for</span> link <span class="keyword">in</span> tsfile:</span><br><span class="line">            <span class="keyword">if</span> link[<span class="string">&quot;uri&quot;</span>] <span class="keyword">not</span> <span class="keyword">in</span> check:</span><br><span class="line">                check.append(link[<span class="string">&quot;uri&quot;</span>])</span><br><span class="line">                a += <span class="number">1</span></span><br><span class="line">                <span class="built_in">print</span>(time() - start, end=<span class="string">&quot;\r&quot;</span>)</span><br><span class="line">        <span class="keyword">if</span> time() - start &gt; <span class="number">3000</span>:</span><br><span class="line">            run = <span class="literal">False</span></span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">download</span>():</span><br><span class="line">    <span class="keyword">global</span> a, stop</span><br><span class="line">    b = <span class="number">0</span></span><br><span class="line">    run = <span class="literal">True</span></span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(Vname + <span class="string">&quot;.ts&quot;</span>, <span class="string">&quot;wb&quot;</span>) <span class="keyword">as</span> f:</span><br><span class="line">        <span class="keyword">while</span> run:</span><br><span class="line">            <span class="keyword">if</span> a &gt; b:</span><br><span class="line">                p = requests.get(check[b])</span><br><span class="line">                f.write(p.content)</span><br><span class="line">                b += <span class="number">1</span></span><br><span class="line">            <span class="keyword">if</span> stop:</span><br><span class="line">                f.close()</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">STOP</span>():</span><br><span class="line">    <span class="keyword">global</span> stop</span><br><span class="line">    <span class="built_in">input</span>()</span><br><span class="line">    stop = <span class="literal">True</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">s1 = Thread(target=downLink)</span><br><span class="line">s2 = Thread(target=download)</span><br><span class="line">s3 = Thread(target=STOP)</span><br><span class="line">s1.start()</span><br><span class="line">s2.start()</span><br><span class="line">s3.start()</span><br></pre></td></tr></table></figure>
+
+<p>对于实时视频流原理是一样的，只是需要循环请求m3u8文件获取ts片段路径，另外如果加密就利用Crypto.Cipher包进行解密，解密的输入包括key和iv。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/04/07/m3u8%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD/" data-id="clky8whz40006hcu5c7fmh30h" data-title="m3u8视频下载" class="article-share-link">Share</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/04/19/pytorch%E5%8F%8A%E5%85%B6%E4%BB%96%E4%B8%80%E4%BA%9B%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0python%E5%BA%93%E4%BB%8B%E7%BB%8D/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          pytorch及其他一些深度学习python库介绍
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/03/06/diffusion-model/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">diffusion_model</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/08/05/%E5%9F%BA%E4%BA%8Epython%E5%8F%8Ac-%E7%9A%84%E6%B5%B7%E5%BA%B7%E6%91%84%E5%83%8F%E5%A4%B4%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91/">基于python及c++的海康摄像头二次开发</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/21/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%BE%AA%E7%8E%AF%E9%98%9F%E5%88%97/">基于python的循环队列</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/19/pytorch%E5%8F%8A%E5%85%B6%E4%BB%96%E4%B8%80%E4%BA%9B%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0python%E5%BA%93%E4%BB%8B%E7%BB%8D/">pytorch及其他一些深度学习python库介绍</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/07/m3u8%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD/">m3u8视频下载</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/06/diffusion-model/">diffusion_model</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 sunzx<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

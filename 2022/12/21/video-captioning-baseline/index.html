@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>video_captioning_baseline | sunzx&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="本文讲解video captioning中一个简单但效果不错的baseline，GitHub仓库为：https:&#x2F;&#x2F;github.com&#x2F;ramakanth-pasunuru&#x2F;video_captioning_rl该baseline基于pytorch框架，主要包括数据预处理，数据加载，网络搭建，模型优化几个模块，虽然代码用的是LSTM网络，但换成现在主流的Transformer网络整体pipeli">
+<meta property="og:type" content="article">
+<meta property="og:title" content="video_captioning_baseline">
+<meta property="og:url" content="http://example.com/2022/12/21/video-captioning-baseline/index.html">
+<meta property="og:site_name" content="sunzx&#39;s blog">
+<meta property="og:description" content="本文讲解video captioning中一个简单但效果不错的baseline，GitHub仓库为：https:&#x2F;&#x2F;github.com&#x2F;ramakanth-pasunuru&#x2F;video_captioning_rl该baseline基于pytorch框架，主要包括数据预处理，数据加载，网络搭建，模型优化几个模块，虽然代码用的是LSTM网络，但换成现在主流的Transformer网络整体pipeli">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-12-21T13:38:58.000Z">
+<meta property="article:modified_time" content="2022-12-30T13:43:03.400Z">
+<meta property="article:author" content="sunzx">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="sunzx's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">sunzx&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-video-captioning-baseline" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/12/21/video-captioning-baseline/" class="article-date">
+  <time class="dt-published" datetime="2022-12-21T13:38:58.000Z" itemprop="datePublished">2022-12-21</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      video_captioning_baseline
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>本文讲解video captioning中一个简单但效果不错的baseline，GitHub仓库为：<a target="_blank" rel="noopener" href="https://github.com/ramakanth-pasunuru/video_captioning_rl">https://github.com/ramakanth-pasunuru/video_captioning_rl</a><br>该baseline基于pytorch框架，主要包括数据预处理，数据加载，网络搭建，模型优化几个模块，虽然代码用的是LSTM网络，但换成现在主流的Transformer网络整体pipeline是相同的</p>
+<h2 id="数据预处理"><a href="#数据预处理" class="headerlink" title="数据预处理"></a>数据预处理</h2><p>该阶段包括视频特征的提取及词库的创建，其中视频特征一般提取两种特征，每帧的appearance feature及motion feature，当然也可以提取每帧的object feature，该baseline使用预训练的ResNet-152提取appearance feature，ResNeXt-101提取motion feature，如果有需要，你可以自己使用检测网络提取object feature，特征下载参见GitHub仓库。而对于文本的处理为统计预料库中单词出现的次数并进行筛选，比如过滤掉频次小于2的单词，添加 start, end, token 标签分别代表句子的开头，结尾及未知词。<br>特别需要形成的一个意识是一个单词对应一个数字, 比如 单词 love 对应 数字5，词库是100，则单词编码是0-99，最后生成的是一个100维矢量，希望经过softmax后第6维(因为从0开始计数)的数值最大。具体查看one-hot相关知识。<br>以下为构建单词与数字对应关系的代码结构。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Vocab</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self,vocab_file,max_size</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Creates a vocab of up to max_size words, reading from the vocab_file. If max_size is 0, reads the entire vocab file.</span></span><br><span class="line"><span class="string">            Args:</span></span><br><span class="line"><span class="string">                vocab_file: path to the vocab file, which is assumed to contain &quot;&lt;word&gt; &lt;frequency&gt;&quot; on each line, sorted with most frequent word first. </span></span><br><span class="line"><span class="string">                            This code doesn&#x27;t actually use the frequencies, though.</span></span><br><span class="line"><span class="string">                max_size: integer. The maximum size of the resulting Vocabulary.</span></span><br><span class="line"><span class="string">                </span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        self._word_to_id = &#123;&#125;</span><br><span class="line">        self._id_to_word = &#123;&#125;</span><br><span class="line">        self._count = <span class="number">0</span> <span class="comment"># keeps track of total number of words in the Vocab</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># [PAD], [START], [STOP] and [UNK] get the ids 0,1,2,3.</span></span><br><span class="line">        <span class="keyword">for</span> w <span class="keyword">in</span> [PAD_TOKEN, START_DECODING, STOP_DECODING, UNKNOWN_TOKEN]:</span><br><span class="line">            self._word_to_id[w] = self._count</span><br><span class="line">            self._id_to_word[self._count] = w</span><br><span class="line">            self._count += <span class="number">1</span></span><br><span class="line">            <span class="comment"># 读取词库，构建单词与数字对应关系</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">word2id</span>(<span class="params">self, word</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Returns the id (integer) of a word (string). Returns [UNK] id if word is OOV.&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">if</span> word <span class="keyword">not</span> <span class="keyword">in</span> self._word_to_id:</span><br><span class="line">            <span class="keyword">return</span> self._word_to_id[UNKNOWN_TOKEN]</span><br><span class="line">        <span class="keyword">return</span> self._word_to_id[word]</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">id2word</span>(<span class="params">self, word_id</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Returns the word (string) corresponding to an id (integer).&quot;&quot;&quot;</span></span><br><span class="line">        <span class="keyword">if</span> word_id <span class="keyword">not</span> <span class="keyword">in</span> self._id_to_word:</span><br><span class="line">            <span class="keyword">raise</span> ValueError(<span class="string">&#x27;Id not found in vocab: %d&#x27;</span> % word_id)</span><br><span class="line">        <span class="keyword">return</span> self._id_to_word[word_id]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="数据加载"><a href="#数据加载" class="headerlink" title="数据加载"></a>数据加载</h2><p>考虑一个业务场景，怎样把硬盘中的超大文件加载到内存? 这时就需要一个函数能够读取文件的一部分到内存，同时记录读取到哪个地方了，而生成器恰好实现了这样的功能。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">file_reader</span>(<span class="params">fp, block_size=<span class="number">1024</span> * <span class="number">8</span></span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;生成器函数：分块读取文件内容</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        chunk = fp.read(block_size)</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> chunk:</span><br><span class="line">            <span class="keyword">break</span></span><br><span class="line">        <span class="keyword">yield</span> chunk</span><br></pre></td></tr></table></figure>
+<p>而在网络结构的训练中，数据是以批 batch 的形式喂到网络结构中的，因此在数据加载部分涉及到迭代器及生成器相关知识。<br>常用的数据加载相关代码如下</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 先定义自己的 MyDataset类，继承自 Dataset</span></span><br><span class="line"><span class="comment"># 在自己的Dataset类中一般需要实现 初始化函数 __init__, 获取元素 __getitem__ 及返回整个数据长度 __len__</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyDataset</span>(<span class="title class_ inherited__">Dataset</span>):</span><br><span class="line">  <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, path</span>):</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line">  <span class="keyword">def</span> <span class="title function_">__getitem__</span>(<span class="params">self, item</span>):</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line">  <span class="keyword">def</span> <span class="title function_">__len__</span>(<span class="params">self</span>):</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 将实例化的Dataset对象输入到Dataloader中便可以以生成器的方式迭代获取数据</span></span><br><span class="line">dataset = MyDataset()</span><br><span class="line">dataloader = Dataloader(dataset, ...)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 迭代获取 batch 数据 训练网络</span></span><br><span class="line"><span class="keyword">for</span> data <span class="keyword">in</span> dataloader:</span><br><span class="line">   <span class="comment"># training...</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 等价与</span></span><br><span class="line">iterr = <span class="built_in">iter</span>(dataloader)</span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">  <span class="keyword">try</span>:</span><br><span class="line">    <span class="built_in">next</span>(iterr)</span><br><span class="line">    <span class="comment"># training...</span></span><br><span class="line">  <span class="keyword">except</span> StopIteration:</span><br><span class="line">    <span class="keyword">break</span></span><br></pre></td></tr></table></figure>
+<p>Dataloader的源码相对复杂，我觉得也没有研究的必要，了解其过程就行，这里关于怎样从Dataloader加载数据的步骤引自  <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/30934236">https://zhuanlan.zhihu.com/p/30934236</a></p>
+<ol>
+<li>调用了dataloader 的__iter__() 方法, 产生了一个DataLoaderIter</li>
+<li>反复调用DataLoaderIter 的__next__()来得到batch, 具体操作就是, 多次调用dataset的__getitem__()方法 (如果num_worker&gt;0就多线程调用), 然后用collate_fn来把它们打包成batch. 中间还会涉及到shuffle , 以及sample 的方法等, 这里就不多说了.</li>
+<li>当数据读完后, <strong>next</strong>()抛出一个StopIteration异常, for循环结束, dataloader 失效.</li>
+</ol>
+<p>dataloader也可以自己写，比如 MSRVTTBatcher 的 get_batcher 通过关键字yield构建了生成器，就可以next的方式迭代获取数据</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MSRVTTBatcher</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self,hps,mode,vocab</span>):</span><br><span class="line">        <span class="comment"># 初始化一些词库路径，视觉特征路径等信息</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_process_data</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;this module extracts data from videos and caption files and creates batches&quot;&quot;&quot;</span></span><br><span class="line">        <span class="comment"># load json data which contains all the information</span></span><br><span class="line">        <span class="comment"># 用于构建 video 与 caption 的关联字典</span></span><br><span class="line">        <span class="keyword">if</span> self._mode == <span class="string">&#x27;train&#x27;</span>:</span><br><span class="line">            np.random.shuffle(data)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            data,_ = <span class="built_in">zip</span>(*data) <span class="comment"># consider only video ids for evaluation</span></span><br><span class="line">            data = <span class="built_in">sorted</span>(<span class="built_in">set</span>(data),key=data.index)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> data,data_dict</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">sort_based_on_caption_lengths</span>(<span class="params">self, video_batch, video_len_batch, video_id, caption_batch, caption_len_batch, original_caption:</span></span><br><span class="line"><span class="params">        <span class="comment"># 根据captioning的长度排序，主要是为了 后续 nn.utils.rnn.pack_padded_sequence 的需要</span></span></span><br><span class="line"><span class="params">    </span></span><br><span class="line"><span class="params">    <span class="keyword">def</span> get_batcher(<span class="params">self</span>):</span></span><br><span class="line"><span class="params">        <span class="string">&quot;&quot;&quot;</span></span></span><br><span class="line"><span class="string"><span class="params">        This module process data and creates batches for train/val/test </span></span></span><br><span class="line"><span class="string"><span class="params">        Also acts as generator</span></span></span><br><span class="line"><span class="string"><span class="params">        &quot;&quot;&quot;</span></span></span><br><span class="line"><span class="params">        <span class="comment"># 构建生成器，以 批 迭代的方式获取数据</span></span></span><br><span class="line"><span class="params">        <span class="keyword">yield</span> batch</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="网络搭建"><a href="#网络搭建" class="headerlink" title="网络搭建"></a>网络搭建</h2><p>神经网络说到底还是矩阵运算，论文中的每个公式与相应的代码一一对应。一般的网络结构定义及调用如下，值得注意的地方是调用网络的时候似乎没有显性调用forward函数，这是因为在执行model(data)的时候，实际执行的是model.<strong>call</strong>(data), 而其继承自nn.Module，所以会调用父类的魔术函数__call__, 在该函数中会调用forward函数及很多其他钩子函数。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 网络结构的定义，继承自 nn.Module</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Model</span>(nn.Module):</span><br><span class="line">    <span class="comment"># 初始化网络模块</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">super</span>(Model, self).__init__()</span><br><span class="line">        self.conv1 = nn.Conv2d(<span class="number">1</span>, <span class="number">20</span>, <span class="number">5</span>)</span><br><span class="line">        self.conv2 = nn.Conv2d(<span class="number">20</span>, <span class="number">20</span>, <span class="number">5</span>)</span><br><span class="line">    <span class="comment"># 搭建网络结构</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        x = F.relu(self.conv1(x))</span><br><span class="line">        <span class="keyword">return</span> F.relu(self.conv2(x))</span><br><span class="line"></span><br><span class="line"><span class="comment"># 实例化网络</span></span><br><span class="line">model = Model()</span><br><span class="line"><span class="comment"># 前向传播</span></span><br><span class="line"><span class="comment"># 实际执行的是model.__call__(data)</span></span><br><span class="line">model(data)</span><br></pre></td></tr></table></figure>
+<p>而对于captioning任务，理论部分提到过一般分为encoder和decoder，所以在代码上也是对应的，一般会使用一个类来总管encoder和decoder。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Seq2seqAttention</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, args</span>):</span><br><span class="line">        <span class="built_in">super</span>(Seq2seqAttention, self).__init__()</span><br><span class="line">        self.args = args</span><br><span class="line">        self.enable_cuda = args.cuda</span><br><span class="line">        self.vid_dim = args.vid_dim</span><br><span class="line">        self.embed_size = args.embed</span><br><span class="line">        self.hidden_dim = args.hid</span><br><span class="line">        self.vocab_size = args.max_vocab_size</span><br><span class="line">        self.num_layers = args.num_layers</span><br><span class="line">        self.birnn = args.birnn</span><br><span class="line">        self.encoder = EncoderFrames(self.args)</span><br><span class="line">        self.decoder = DecoderRNN(self.args)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, frames, flengths, captions, lengths</span>):</span><br><span class="line">        video_features = self.encoder(frames, flengths)</span><br><span class="line">        outputs = self.decoder(video_features, flengths, captions, lengths)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> outputs</span><br></pre></td></tr></table></figure>
+<p>值得特别注意的是该代码在encoder部分使用了pack_padded_sequence，算是一个减小padding噪音的trick</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Based on tutorials/08 - Language Model</span></span><br><span class="line"><span class="comment"># RNN Based Language Model</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">EncoderFrames</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, args</span>):</span><br><span class="line">        <span class="built_in">super</span>(EncoderFrames, self).__init__()</span><br><span class="line">        <span class="comment"># self.use_abs = use_abs</span></span><br><span class="line">        self.vid_dim = args.vid_dim</span><br><span class="line">        self.embed_size = args.embed</span><br><span class="line">        self.hidden_dim = args.hid</span><br><span class="line">        self.enable_cuda = args.cuda</span><br><span class="line">        self.num_layers = args.num_layers</span><br><span class="line">        self.args = args</span><br><span class="line">        <span class="keyword">if</span> args.birnn:</span><br><span class="line">            self.birnn = <span class="number">2</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            self.birnn = <span class="number">1</span></span><br><span class="line">        <span class="comment"># projection layer</span></span><br><span class="line">        self.linear = nn.Linear(self.vid_dim, self.embed_size, bias=<span class="literal">False</span>)</span><br><span class="line">        <span class="comment"># video embedding</span></span><br><span class="line">        self.rnn = nn.LSTM(self.embed_size, self.hidden_dim, self.num_layers, batch_first=<span class="literal">True</span>, bidirectional=self.args.birnn, dropout=args.dropout)</span><br><span class="line">        self.dropout = nn.Dropout(args.dropout)</span><br><span class="line">        self.init_weights()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">init_weights</span>(<span class="params">self</span>):</span><br><span class="line">        self.rnn.weight_hh_l0.data.uniform_(-<span class="number">0.08</span>, <span class="number">0.08</span>)</span><br><span class="line">        self.rnn.weight_ih_l0.data.uniform_(-<span class="number">0.08</span>, <span class="number">0.08</span>)</span><br><span class="line">        self.rnn.bias_ih_l0.data.fill_(<span class="number">0</span>)</span><br><span class="line">        self.rnn.bias_hh_l0.data.fill_(<span class="number">0</span>)</span><br><span class="line">        self.linear.weight.data.uniform_(-<span class="number">0.08</span>, <span class="number">0.08</span>)</span><br><span class="line">        <span class="comment">#self.linear.bias.data.fill_(0)</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">init_hidden</span>(<span class="params">self, batch_size</span>):</span><br><span class="line">        <span class="keyword">if</span> self.birnn:</span><br><span class="line">            <span class="keyword">return</span> (Variable(torch.zeros(self.birnn*self.num_layers, batch_size, self.hidden_dim)),</span><br><span class="line">                    Variable(torch.zeros(self.birnn*self.num_layers, batch_size, self.hidden_dim)))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, frames, flengths</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Handles variable size frames</span></span><br><span class="line"><span class="string">           frame_embed: video features</span></span><br><span class="line"><span class="string">           flengths: frame lengths</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        batch_size = flengths.shape[<span class="number">0</span>]</span><br><span class="line">        <span class="comment">#frames = self.linear(frames)</span></span><br><span class="line">        <span class="comment">#frames = self.dropout(frames) # adding dropout layer</span></span><br><span class="line">        self.init_rnn = self.init_hidden(batch_size)</span><br><span class="line">        <span class="keyword">if</span> self.enable_cuda:</span><br><span class="line">            self.init_rnn = self.init_rnn[<span class="number">0</span>].cuda(), self.init_rnn[<span class="number">1</span>].cuda()</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> batch_size &gt; <span class="number">1</span>:</span><br><span class="line">            <span class="comment"># Sort by length (keep idx)</span></span><br><span class="line">            flengths, idx_sort = np.sort(flengths)[::-<span class="number">1</span>], np.argsort(-flengths)</span><br><span class="line">            <span class="keyword">if</span> self.enable_cuda:</span><br><span class="line">                frames = frames.index_select(<span class="number">0</span>, Variable(torch.cuda.LongTensor(idx_sort)))</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                frames = frames.index_select(<span class="number">0</span>, Variable(torch.LongTensor(idx_sort)))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        frames = self.linear(frames)</span><br><span class="line">        <span class="comment"># 值得特别注意，一个小trick</span></span><br><span class="line">        frame_packed = nn.utils.rnn.pack_padded_sequence(frames, flengths, batch_first=<span class="literal">True</span>)</span><br><span class="line">        outputs, (ht, ct) = self.rnn(frame_packed, self.init_rnn)</span><br><span class="line">        outputs,_ = pad_packed_sequence(outputs,batch_first=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> batch_size &gt; <span class="number">1</span>:</span><br><span class="line">            <span class="comment"># Un-sort by length</span></span><br><span class="line">            idx_unsort = np.argsort(idx_sort)</span><br><span class="line">            <span class="keyword">if</span> self.enable_cuda:</span><br><span class="line">                outputs = outputs.index_select(<span class="number">0</span>, Variable(torch.cuda.LongTensor(idx_unsort)))</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                outputs = outputs.index_select(<span class="number">0</span>, Variable(torch.LongTensor(idx_unsort)))</span><br><span class="line"></span><br><span class="line">        <span class="comment"># print &#x27;Encoder Outputs:&#x27;,outputs.size()</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> outputs</span><br></pre></td></tr></table></figure>
+
+<p><strong>特别提醒一下该词库有关beam search及强化学习的代码也是非常清晰，对于原理学习及后续改进都十分有利</strong></p>
+<h2 id="模型优化"><a href="#模型优化" class="headerlink" title="模型优化"></a>模型优化</h2><p>这个地方代码差不多，注意训练的时候调用model.train(),测试的时候调用model.eval(), 还有注意交叉熵损失函数的输入就行。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">train_model</span>(<span class="params">self</span>):</span><br><span class="line">    total_loss = <span class="number">0</span></span><br><span class="line">    model = self.model</span><br><span class="line">    model.train()</span><br><span class="line"></span><br><span class="line">    batcher = self.train_data.get_batcher()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> step <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">0</span>,self.train_data.num_steps): </span><br><span class="line">        batch = <span class="built_in">next</span>(batcher)</span><br><span class="line">        <span class="comment"># 获取数据</span></span><br><span class="line">        video_features = batch.get(<span class="string">&#x27;video_batch&#x27;</span>)</span><br><span class="line">        flengths = batch.get(<span class="string">&#x27;video_len_batch&#x27;</span>)</span><br><span class="line">        captions = batch.get(<span class="string">&#x27;caption_batch&#x27;</span>)</span><br><span class="line">        clengths = batch.get(<span class="string">&#x27;caption_len_batch&#x27;</span>)</span><br><span class="line">        video_features = to_var(self.args, video_features)</span><br><span class="line">        captions = to_var(self.args, captions)</span><br><span class="line">        <span class="comment"># 求损失函数</span></span><br><span class="line">        outputs = self.model(video_features, flengths, captions, clengths)</span><br><span class="line">        targets = pack_padded_sequence(captions, clengths, batch_first=<span class="literal">True</span>)[<span class="number">0</span>]</span><br><span class="line">        loss = self.ce(outputs, targets)</span><br><span class="line">           </span><br><span class="line">        <span class="comment"># update</span></span><br><span class="line">        self.optim.zero_grad()</span><br><span class="line">        loss.backward()</span><br><span class="line"></span><br><span class="line">        t.nn.utils.clip_grad_norm(</span><br><span class="line">                model.parameters(), self.args.grad_clip)</span><br><span class="line">        self.optim.step()</span><br><span class="line"></span><br><span class="line">        total_loss += loss.data</span><br><span class="line">        pbar.set_description(<span class="string">f&quot;train_model| loss: <span class="subst">&#123;loss.data[<span class="number">0</span>]:<span class="number">5.3</span>f&#125;</span>&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        step += <span class="number">1</span></span><br><span class="line">        self.step += <span class="number">1</span></span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/12/21/video-captioning-baseline/" data-id="clky8whzf000fhcu59nita2fm" data-title="video_captioning_baseline" class="article-share-link">Share</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2022/12/29/python%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%A7%86%E8%A7%89/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          python计算机视觉
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2022/12/10/video-caption/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">video captioning</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/08/05/%E5%9F%BA%E4%BA%8Epython%E5%8F%8Ac-%E7%9A%84%E6%B5%B7%E5%BA%B7%E6%91%84%E5%83%8F%E5%A4%B4%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91/">基于python及c++的海康摄像头二次开发</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/21/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%BE%AA%E7%8E%AF%E9%98%9F%E5%88%97/">基于python的循环队列</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/19/pytorch%E5%8F%8A%E5%85%B6%E4%BB%96%E4%B8%80%E4%BA%9B%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0python%E5%BA%93%E4%BB%8B%E7%BB%8D/">pytorch及其他一些深度学习python库介绍</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/07/m3u8%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD/">m3u8视频下载</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/06/diffusion-model/">diffusion_model</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 sunzx<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

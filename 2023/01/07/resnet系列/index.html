@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>resnet系列 | sunzx&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="resnet系列任然是很多计算机视觉任务的backbone，本文从论文和代码角度对其进行讲解。 Deep Residual Learning for Image RecognitionResNet解决的是网络退化问题（注意不是梯度消失或爆炸），什么是网络退化见下图不同深度的网络结构如下注意每层的第一个block的stride是可以是2或1，剩下的block是1代码参见：https:&#x2F;&#x2F;github">
+<meta property="og:type" content="article">
+<meta property="og:title" content="resnet系列">
+<meta property="og:url" content="http://example.com/2023/01/07/resnet%E7%B3%BB%E5%88%97/index.html">
+<meta property="og:site_name" content="sunzx&#39;s blog">
+<meta property="og:description" content="resnet系列任然是很多计算机视觉任务的backbone，本文从论文和代码角度对其进行讲解。 Deep Residual Learning for Image RecognitionResNet解决的是网络退化问题（注意不是梯度消失或爆炸），什么是网络退化见下图不同深度的网络结构如下注意每层的第一个block的stride是可以是2或1，剩下的block是1代码参见：https:&#x2F;&#x2F;github">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/resnet_pri.png">
+<meta property="og:image" content="http://example.com/images/resnet_framework.png">
+<meta property="og:image" content="http://example.com/images/resnxt_pri.png">
+<meta property="og:image" content="http://example.com/images/resnext.png">
+<meta property="article:published_time" content="2023-01-07T05:08:01.000Z">
+<meta property="article:modified_time" content="2023-04-07T16:04:58.624Z">
+<meta property="article:author" content="sunzx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/resnet_pri.png">
+  
+    <link rel="alternate" href="/atom.xml" title="sunzx's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">sunzx&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-resnet系列" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/01/07/resnet%E7%B3%BB%E5%88%97/" class="article-date">
+  <time class="dt-published" datetime="2023-01-07T05:08:01.000Z" itemprop="datePublished">2023-01-07</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      resnet系列
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>resnet系列任然是很多计算机视觉任务的backbone，本文从论文和代码角度对其进行讲解。</p>
+<h2 id="Deep-Residual-Learning-for-Image-Recognition"><a href="#Deep-Residual-Learning-for-Image-Recognition" class="headerlink" title="Deep Residual Learning for Image Recognition"></a>Deep Residual Learning for Image Recognition</h2><p>ResNet解决的是网络退化问题（注意不是梯度消失或爆炸），什么是网络退化见下图<br><img src="/../images/resnet_pri.png"><br>不同深度的网络结构如下<br><img src="/../images/resnet_framework.png"><br>注意每层的第一个block的stride是可以是2或1，剩下的block是1<br>代码参见：<a target="_blank" rel="noopener" href="https://github.com/weiaicunzai/pytorch-cifar100/tree/master/models">https://github.com/weiaicunzai/pytorch-cifar100/tree/master/models</a><br>值得注意的是残差连接需要考虑通道数不同与由于stride导致的大小不同的情况</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;&quot;&quot;resnet in pytorch</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">[1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Deep Residual Learning for Image Recognition</span></span><br><span class="line"><span class="string">    https://arxiv.org/abs/1512.03385v1</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">BasicBlock</span>(nn.Module):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Basic Block for resnet 18 and resnet 34</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">#BasicBlock and BottleNeck block</span></span><br><span class="line">    <span class="comment">#have different output size</span></span><br><span class="line">    <span class="comment">#we use class attribute expansion</span></span><br><span class="line">    <span class="comment">#to distinct</span></span><br><span class="line">    expansion = <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, in_channels, out_channels, stride=<span class="number">1</span></span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line"></span><br><span class="line">        <span class="comment">#residual function</span></span><br><span class="line">        self.residual_function = nn.Sequential(</span><br><span class="line">            nn.Conv2d(in_channels, out_channels, kernel_size=<span class="number">3</span>, stride=stride, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(out_channels),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>),</span><br><span class="line">            nn.Conv2d(out_channels, out_channels * BasicBlock.expansion, kernel_size=<span class="number">3</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(out_channels * BasicBlock.expansion)</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        <span class="comment">#shortcut</span></span><br><span class="line">        self.shortcut = nn.Sequential()</span><br><span class="line"></span><br><span class="line">        <span class="comment">#the shortcut output dimension is not the same with residual function</span></span><br><span class="line">        <span class="comment">#use 1*1 convolution to match the dimension</span></span><br><span class="line">        <span class="keyword">if</span> stride != <span class="number">1</span> <span class="keyword">or</span> in_channels != BasicBlock.expansion * out_channels:</span><br><span class="line">            self.shortcut = nn.Sequential(</span><br><span class="line">                nn.Conv2d(in_channels, out_channels * BasicBlock.expansion, kernel_size=<span class="number">1</span>, stride=stride, bias=<span class="literal">False</span>),</span><br><span class="line">                nn.BatchNorm2d(out_channels * BasicBlock.expansion)</span><br><span class="line">            )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        <span class="keyword">return</span> nn.ReLU(inplace=<span class="literal">True</span>)(self.residual_function(x) + self.shortcut(x))</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">BottleNeck</span>(nn.Module):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;Residual block for resnet over 50 layers</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    expansion = <span class="number">4</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, in_channels, out_channels, stride=<span class="number">1</span></span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        self.residual_function = nn.Sequential(</span><br><span class="line">            nn.Conv2d(in_channels, out_channels, kernel_size=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(out_channels),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>),</span><br><span class="line">            nn.Conv2d(out_channels, out_channels, stride=stride, kernel_size=<span class="number">3</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(out_channels),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>),</span><br><span class="line">            nn.Conv2d(out_channels, out_channels * BottleNeck.expansion, kernel_size=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(out_channels * BottleNeck.expansion),</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        self.shortcut = nn.Sequential()</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> stride != <span class="number">1</span> <span class="keyword">or</span> in_channels != out_channels * BottleNeck.expansion:</span><br><span class="line">            self.shortcut = nn.Sequential(</span><br><span class="line">                nn.Conv2d(in_channels, out_channels * BottleNeck.expansion, stride=stride, kernel_size=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">                nn.BatchNorm2d(out_channels * BottleNeck.expansion)</span><br><span class="line">            )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        <span class="keyword">return</span> nn.ReLU(inplace=<span class="literal">True</span>)(self.residual_function(x) + self.shortcut(x))</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ResNet</span>(nn.Module):</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, block, num_block, num_classes=<span class="number">100</span></span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line"></span><br><span class="line">        self.in_channels = <span class="number">64</span></span><br><span class="line"></span><br><span class="line">        self.conv1 = nn.Sequential(</span><br><span class="line">            nn.Conv2d(<span class="number">3</span>, <span class="number">64</span>, kernel_size=<span class="number">3</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(<span class="number">64</span>),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>))</span><br><span class="line">        <span class="comment">#we use a different inputsize than the original paper</span></span><br><span class="line">        <span class="comment">#so conv2_x&#x27;s stride is 1</span></span><br><span class="line">        self.conv2_x = self._make_layer(block, <span class="number">64</span>, num_block[<span class="number">0</span>], <span class="number">1</span>)</span><br><span class="line">        self.conv3_x = self._make_layer(block, <span class="number">128</span>, num_block[<span class="number">1</span>], <span class="number">2</span>)</span><br><span class="line">        self.conv4_x = self._make_layer(block, <span class="number">256</span>, num_block[<span class="number">2</span>], <span class="number">2</span>)</span><br><span class="line">        self.conv5_x = self._make_layer(block, <span class="number">512</span>, num_block[<span class="number">3</span>], <span class="number">2</span>)</span><br><span class="line">        self.avg_pool = nn.AdaptiveAvgPool2d((<span class="number">1</span>, <span class="number">1</span>))</span><br><span class="line">        self.fc = nn.Linear(<span class="number">512</span> * block.expansion, num_classes)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_make_layer</span>(<span class="params">self, block, out_channels, num_blocks, stride</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;make resnet layers(by layer i didnt mean this &#x27;layer&#x27; was the</span></span><br><span class="line"><span class="string">        same as a neuron netowork layer, ex. conv layer), one layer may</span></span><br><span class="line"><span class="string">        contain more than one residual block</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            block: block type, basic block or bottle neck block</span></span><br><span class="line"><span class="string">            out_channels: output depth channel number of this layer</span></span><br><span class="line"><span class="string">            num_blocks: how many blocks per layer</span></span><br><span class="line"><span class="string">            stride: the stride of the first block of this layer</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Return:</span></span><br><span class="line"><span class="string">            return a resnet layer</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># we have num_block blocks per layer, the first block</span></span><br><span class="line">        <span class="comment"># could be 1 or 2, other blocks would always be 1</span></span><br><span class="line">        strides = [stride] + [<span class="number">1</span>] * (num_blocks - <span class="number">1</span>)</span><br><span class="line">        layers = []</span><br><span class="line">        <span class="keyword">for</span> stride <span class="keyword">in</span> strides:</span><br><span class="line">            layers.append(block(self.in_channels, out_channels, stride))</span><br><span class="line">            self.in_channels = out_channels * block.expansion</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> nn.Sequential(*layers)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        output = self.conv1(x)</span><br><span class="line">        output = self.conv2_x(output)</span><br><span class="line">        output = self.conv3_x(output)</span><br><span class="line">        output = self.conv4_x(output)</span><br><span class="line">        output = self.conv5_x(output)</span><br><span class="line">        output = self.avg_pool(output)</span><br><span class="line">        output = output.view(output.size(<span class="number">0</span>), -<span class="number">1</span>)</span><br><span class="line">        output = self.fc(output)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> output</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">resnet18</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot; return a ResNet 18 object</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> ResNet(BasicBlock, [<span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>])</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">resnet34</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot; return a ResNet 34 object</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> ResNet(BasicBlock, [<span class="number">3</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">3</span>])</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">resnet50</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot; return a ResNet 50 object</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> ResNet(BottleNeck, [<span class="number">3</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">3</span>])</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">resnet101</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot; return a ResNet 101 object</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> ResNet(BottleNeck, [<span class="number">3</span>, <span class="number">4</span>, <span class="number">23</span>, <span class="number">3</span>])</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">resnet152</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot; return a ResNet 152 object</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> ResNet(BottleNeck, [<span class="number">3</span>, <span class="number">8</span>, <span class="number">36</span>, <span class="number">3</span>])</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="Aggregated-Residual-Transformations-for-Deep-Neural-Networks"><a href="#Aggregated-Residual-Transformations-for-Deep-Neural-Networks" class="headerlink" title="Aggregated Residual Transformations for Deep Neural Networks"></a>Aggregated Residual Transformations for Deep Neural Networks</h2><p>基于ResNet，另一个被广泛使用的backbone是ResNeXt，其原理图如下<br><img src="/../images/resnxt_pri.png"><br>ResNext基本是在ResNet的基础上在通道上进行划分，在代码上通过的group参数可以快速实现，其网络结构与ResNet同步<br><img src="/../images/resnext.png"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;&quot;&quot;resnext in pytorch</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">[1] Saining Xie, Ross Girshick, Piotr Dollár, Zhuowen Tu, Kaiming He.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Aggregated Residual Transformations for Deep Neural Networks</span></span><br><span class="line"><span class="string">    https://arxiv.org/abs/1611.05431</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> math</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"><span class="keyword">import</span> torch.nn.functional <span class="keyword">as</span> F</span><br><span class="line"></span><br><span class="line"><span class="comment">#only implements ResNext bottleneck c</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">#&quot;&quot;&quot;This strategy exposes a new dimension, which we call “cardinality”</span></span><br><span class="line"><span class="comment">#(the size of the set of transformations), as an essential factor</span></span><br><span class="line"><span class="comment">#in addition to the dimensions of depth and width.&quot;&quot;&quot;</span></span><br><span class="line">CARDINALITY = <span class="number">32</span></span><br><span class="line">DEPTH = <span class="number">4</span></span><br><span class="line">BASEWIDTH = <span class="number">64</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#&quot;&quot;&quot;The grouped convolutional layer in Fig. 3(c) performs 32 groups</span></span><br><span class="line"><span class="comment">#of convolutions whose input and output channels are 4-dimensional.</span></span><br><span class="line"><span class="comment">#The grouped convolutional layer concatenates them as the outputs</span></span><br><span class="line"><span class="comment">#of the layer.&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ResNextBottleNeckC</span>(nn.Module):</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, in_channels, out_channels, stride</span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line"></span><br><span class="line">        C = CARDINALITY <span class="comment">#How many groups a feature map was splitted into</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">#&quot;&quot;&quot;We note that the input/output width of the template is fixed as</span></span><br><span class="line">        <span class="comment">#256-d (Fig. 3), We note that the input/output width of the template</span></span><br><span class="line">        <span class="comment">#is fixed as 256-d (Fig. 3), and all widths are dou- bled each time</span></span><br><span class="line">        <span class="comment">#when the feature map is subsampled (see Table 1).&quot;&quot;&quot;</span></span><br><span class="line">        D = <span class="built_in">int</span>(DEPTH * out_channels / BASEWIDTH) <span class="comment">#number of channels per group</span></span><br><span class="line">        self.split_transforms = nn.Sequential(</span><br><span class="line">            nn.Conv2d(in_channels, C * D, kernel_size=<span class="number">1</span>, groups=C, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(C * D),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>),</span><br><span class="line">            nn.Conv2d(C * D, C * D, kernel_size=<span class="number">3</span>, stride=stride, groups=C, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(C * D),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>),</span><br><span class="line">            nn.Conv2d(C * D, out_channels * <span class="number">4</span>, kernel_size=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(out_channels * <span class="number">4</span>),</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        self.shortcut = nn.Sequential()</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> stride != <span class="number">1</span> <span class="keyword">or</span> in_channels != out_channels * <span class="number">4</span>:</span><br><span class="line">            self.shortcut = nn.Sequential(</span><br><span class="line">                nn.Conv2d(in_channels, out_channels * <span class="number">4</span>, stride=stride, kernel_size=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">                nn.BatchNorm2d(out_channels * <span class="number">4</span>)</span><br><span class="line">            )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        <span class="keyword">return</span> F.relu(self.split_transforms(x) + self.shortcut(x))</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">ResNext</span>(nn.Module):</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, block, num_blocks, class_names=<span class="number">100</span></span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        self.in_channels = <span class="number">64</span></span><br><span class="line"></span><br><span class="line">        self.conv1 = nn.Sequential(</span><br><span class="line">            nn.Conv2d(<span class="number">3</span>, <span class="number">64</span>, <span class="number">3</span>, stride=<span class="number">1</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(<span class="number">64</span>),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>)</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        self.conv2 = self._make_layer(block, num_blocks[<span class="number">0</span>], <span class="number">64</span>, <span class="number">1</span>)</span><br><span class="line">        self.conv3 = self._make_layer(block, num_blocks[<span class="number">1</span>], <span class="number">128</span>, <span class="number">2</span>)</span><br><span class="line">        self.conv4 = self._make_layer(block, num_blocks[<span class="number">2</span>], <span class="number">256</span>, <span class="number">2</span>)</span><br><span class="line">        self.conv5 = self._make_layer(block, num_blocks[<span class="number">3</span>], <span class="number">512</span>, <span class="number">2</span>)</span><br><span class="line">        self.avg = nn.AdaptiveAvgPool2d((<span class="number">1</span>, <span class="number">1</span>))</span><br><span class="line">        self.fc = nn.Linear(<span class="number">512</span> * <span class="number">4</span>, <span class="number">100</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        x = self.conv1(x)</span><br><span class="line">        x = self.conv2(x)</span><br><span class="line">        x = self.conv3(x)</span><br><span class="line">        x = self.conv4(x)</span><br><span class="line">        x = self.conv5(x)</span><br><span class="line">        x = self.avg(x)</span><br><span class="line">        x = x.view(x.size(<span class="number">0</span>), -<span class="number">1</span>)</span><br><span class="line">        x = self.fc(x)</span><br><span class="line">        <span class="keyword">return</span> x</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_make_layer</span>(<span class="params">self, block, num_block, out_channels, stride</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Building resnext block</span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            block: block type(default resnext bottleneck c)</span></span><br><span class="line"><span class="string">            num_block: number of blocks per layer</span></span><br><span class="line"><span class="string">            out_channels: output channels per block</span></span><br><span class="line"><span class="string">            stride: block stride</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Returns:</span></span><br><span class="line"><span class="string">            a resnext layer</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        strides = [stride] + [<span class="number">1</span>] * (num_block - <span class="number">1</span>)</span><br><span class="line">        layers = []</span><br><span class="line">        <span class="keyword">for</span> stride <span class="keyword">in</span> strides:</span><br><span class="line">            layers.append(block(self.in_channels, out_channels, stride))</span><br><span class="line">            self.in_channels = out_channels * <span class="number">4</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> nn.Sequential(*layers)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">resnext50</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot; return a resnext50(c32x4d) network</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> ResNext(ResNextBottleNeckC, [<span class="number">3</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">3</span>])</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">resnext101</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot; return a resnext101(c32x4d) network</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> ResNext(ResNextBottleNeckC, [<span class="number">3</span>, <span class="number">4</span>, <span class="number">23</span>, <span class="number">3</span>])</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">resnext152</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot; return a resnext101(c32x4d) network</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">return</span> ResNext(ResNextBottleNeckC, [<span class="number">3</span>, <span class="number">4</span>, <span class="number">36</span>, <span class="number">3</span>])</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/01/07/resnet%E7%B3%BB%E5%88%97/" data-id="clky8whz60009hcu50pnj5h6h" data-title="resnet系列" class="article-share-link">Share</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/01/08/semantic-segment-%E6%80%BB%E7%BB%93/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          semantic-segment-总结
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/01/02/downloader/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">downloader</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/08/05/%E5%9F%BA%E4%BA%8Epython%E5%8F%8Ac-%E7%9A%84%E6%B5%B7%E5%BA%B7%E6%91%84%E5%83%8F%E5%A4%B4%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91/">基于python及c++的海康摄像头二次开发</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/21/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%BE%AA%E7%8E%AF%E9%98%9F%E5%88%97/">基于python的循环队列</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/19/pytorch%E5%8F%8A%E5%85%B6%E4%BB%96%E4%B8%80%E4%BA%9B%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0python%E5%BA%93%E4%BB%8B%E7%BB%8D/">pytorch及其他一些深度学习python库介绍</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/07/m3u8%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD/">m3u8视频下载</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/06/diffusion-model/">diffusion_model</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 sunzx<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

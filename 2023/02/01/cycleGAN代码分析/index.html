@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>cycleGAN代码分析 | sunzx&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="本文浅析cycleGAN代码，实现对cycleGAN代码有一个基本认识所分析的代码仓库：https:&#x2F;&#x2F;github.com&#x2F;junyanz&#x2F;pytorch-CycleGAN-and-pix2pix 装饰器由于使用到了 abc 模块（一个抽象工具模块），顺带介绍一下python装饰器的使用。装饰器的作用是在不改变原代码的情况下拓展函数功能，经常用于有切面需求的场景，比如：插入日志、性能测试、事务处">
+<meta property="og:type" content="article">
+<meta property="og:title" content="cycleGAN代码分析">
+<meta property="og:url" content="http://example.com/2023/02/01/cycleGAN%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="sunzx&#39;s blog">
+<meta property="og:description" content="本文浅析cycleGAN代码，实现对cycleGAN代码有一个基本认识所分析的代码仓库：https:&#x2F;&#x2F;github.com&#x2F;junyanz&#x2F;pytorch-CycleGAN-and-pix2pix 装饰器由于使用到了 abc 模块（一个抽象工具模块），顺带介绍一下python装饰器的使用。装饰器的作用是在不改变原代码的情况下拓展函数功能，经常用于有切面需求的场景，比如：插入日志、性能测试、事务处">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-02-01T13:38:58.000Z">
+<meta property="article:modified_time" content="2023-02-01T14:20:19.270Z">
+<meta property="article:author" content="sunzx">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="sunzx's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">sunzx&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-cycleGAN代码分析" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/02/01/cycleGAN%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/" class="article-date">
+  <time class="dt-published" datetime="2023-02-01T13:38:58.000Z" itemprop="datePublished">2023-02-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      cycleGAN代码分析
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>本文浅析cycleGAN代码，实现对cycleGAN代码有一个基本认识<br>所分析的代码仓库：<a target="_blank" rel="noopener" href="https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix">https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix</a></p>
+<h2 id="装饰器"><a href="#装饰器" class="headerlink" title="装饰器"></a>装饰器</h2><p>由于使用到了 abc 模块（一个抽象工具模块），顺带介绍一下python装饰器的使用。<br>装饰器的作用是在不改变原代码的情况下拓展函数功能，经常用于有切面需求的场景，比如：插入日志、性能测试、事务处理、缓存、权限校验等场景。装饰器包括函数装饰器和类装饰器，其中函数装饰器通过闭包实现（高阶函数的作用）。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">add_log</span>(<span class="params">func</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">use_logging</span>(<span class="params">*args, **kwargs</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;add logging&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> func(*args, **kwargs)</span><br><span class="line">    <span class="keyword">return</span> use_logging</span><br><span class="line"></span><br><span class="line"><span class="meta">@add_log</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">bar</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;I am bar&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># bar = add_log(bar)</span></span><br><span class="line">bar()</span><br></pre></td></tr></table></figure>
+<p>如上代码，通过装饰器add_log装饰后的bar() 等价为 add_log(bar)()<br>如果要使用带参数的装饰器，就需要嵌套一层以传入参数</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">param_log</span>(<span class="params">level</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">decorator</span>(<span class="params">func</span>):</span><br><span class="line">        <span class="keyword">def</span> <span class="title function_">wrapper</span>(<span class="params">*args, **kwargs</span>):</span><br><span class="line">            <span class="keyword">if</span> level == <span class="string">&quot;warn&quot;</span>:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;level is warn&quot;</span>)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="built_in">print</span>(<span class="string">&quot;level is not warn&quot;</span>)</span><br><span class="line">            <span class="keyword">return</span> func(*args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> wrapper</span><br><span class="line">    <span class="keyword">return</span> decorator</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@param_log(<span class="params">level=<span class="string">&quot;warn&quot;</span></span>)</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">foo</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;I am foo&quot;</span>)</span><br><span class="line"></span><br><span class="line">foo()</span><br></pre></td></tr></table></figure>
+<p>类装饰器通过 init 函数初始化要装饰的函数，具体实现在 call 函数中</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Foo</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, func</span>):</span><br><span class="line">        self._func = func</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__call__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;class decorator runing&#x27;</span>)</span><br><span class="line">        self._func()</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;class decorator ending&#x27;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@Foo</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">bar</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;bar&#x27;</span>)</span><br><span class="line"></span><br><span class="line">bar()</span><br></pre></td></tr></table></figure>
+<p>abc 模块中定义了抽象方法装饰器</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">abstractmethod</span>(<span class="params">funcobj</span>):</span><br><span class="line">    funcobj.__isabstractmethod__ = <span class="literal">True</span></span><br><span class="line">    <span class="keyword">return</span> funcobj</span><br></pre></td></tr></table></figure>
+
+<h3 id="cycleGAN"><a href="#cycleGAN" class="headerlink" title="cycleGAN"></a>cycleGAN</h3><p>GAN网络的训练方式有点特殊，因此其整体框架稍有不同，下面对其进行分析</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> itertools</span><br><span class="line"><span class="keyword">from</span> util.image_pool <span class="keyword">import</span> ImagePool</span><br><span class="line"><span class="keyword">from</span> .base_model <span class="keyword">import</span> BaseModel</span><br><span class="line"><span class="keyword">from</span> . <span class="keyword">import</span> networks</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">CycleGANModel</span>(<span class="title class_ inherited__">BaseModel</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    This class implements the CycleGAN model, for learning image-to-image translation without paired data.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    The model training requires &#x27;--dataset_mode unaligned&#x27; dataset.</span></span><br><span class="line"><span class="string">    By default, it uses a &#x27;--netG resnet_9blocks&#x27; ResNet generator,</span></span><br><span class="line"><span class="string">    a &#x27;--netD basic&#x27; discriminator (PatchGAN introduced by pix2pix),</span></span><br><span class="line"><span class="string">    and a least-square GANs objective (&#x27;--gan_mode lsgan&#x27;).</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    CycleGAN paper: https://arxiv.org/pdf/1703.10593.pdf</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">modify_commandline_options</span>(<span class="params">parser, is_train=<span class="literal">True</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Add new dataset-specific options, and rewrite default values for existing options.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Parameters:</span></span><br><span class="line"><span class="string">            parser          -- original option parser</span></span><br><span class="line"><span class="string">            is_train (bool) -- whether training phase or test phase. You can use this flag to add training-specific or test-specific options.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Returns:</span></span><br><span class="line"><span class="string">            the modified parser.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        For CycleGAN, in addition to GAN losses, we introduce lambda_A, lambda_B, and lambda_identity for the following losses.</span></span><br><span class="line"><span class="string">        A (source domain), B (target domain).</span></span><br><span class="line"><span class="string">        Generators: G_A: A -&gt; B; G_B: B -&gt; A.</span></span><br><span class="line"><span class="string">        Discriminators: D_A: G_A(A) vs. B; D_B: G_B(B) vs. A.</span></span><br><span class="line"><span class="string">        Forward cycle loss:  lambda_A * ||G_B(G_A(A)) - A|| (Eqn. (2) in the paper)</span></span><br><span class="line"><span class="string">        Backward cycle loss: lambda_B * ||G_A(G_B(B)) - B|| (Eqn. (2) in the paper)</span></span><br><span class="line"><span class="string">        Identity loss (optional): lambda_identity * (||G_A(B) - B|| * lambda_B + ||G_B(A) - A|| * lambda_A) (Sec 5.2 &quot;Photo generation from paintings&quot; in the paper)</span></span><br><span class="line"><span class="string">        Dropout is not used in the original CycleGAN paper.</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        parser.set_defaults(no_dropout=<span class="literal">True</span>)  <span class="comment"># default CycleGAN did not use dropout</span></span><br><span class="line">        <span class="keyword">if</span> is_train:</span><br><span class="line">            parser.add_argument(<span class="string">&#x27;--lambda_A&#x27;</span>, <span class="built_in">type</span>=<span class="built_in">float</span>, default=<span class="number">10.0</span>, <span class="built_in">help</span>=<span class="string">&#x27;weight for cycle loss (A -&gt; B -&gt; A)&#x27;</span>)</span><br><span class="line">            parser.add_argument(<span class="string">&#x27;--lambda_B&#x27;</span>, <span class="built_in">type</span>=<span class="built_in">float</span>, default=<span class="number">10.0</span>, <span class="built_in">help</span>=<span class="string">&#x27;weight for cycle loss (B -&gt; A -&gt; B)&#x27;</span>)</span><br><span class="line">            parser.add_argument(<span class="string">&#x27;--lambda_identity&#x27;</span>, <span class="built_in">type</span>=<span class="built_in">float</span>, default=<span class="number">0.5</span>, <span class="built_in">help</span>=<span class="string">&#x27;use identity mapping. Setting lambda_identity other than 0 has an effect of scaling the weight of the identity mapping loss. For example, if the weight of the identity loss should be 10 times smaller than the weight of the reconstruction loss, please set lambda_identity = 0.1&#x27;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> parser</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, opt</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Initialize the CycleGAN class.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Parameters:</span></span><br><span class="line"><span class="string">            opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        BaseModel.__init__(self, opt)</span><br><span class="line">        <span class="comment"># specify the training losses you want to print out. The training/test scripts will call &lt;BaseModel.get_current_losses&gt;</span></span><br><span class="line">        self.loss_names = [<span class="string">&#x27;D_A&#x27;</span>, <span class="string">&#x27;G_A&#x27;</span>, <span class="string">&#x27;cycle_A&#x27;</span>, <span class="string">&#x27;idt_A&#x27;</span>, <span class="string">&#x27;D_B&#x27;</span>, <span class="string">&#x27;G_B&#x27;</span>, <span class="string">&#x27;cycle_B&#x27;</span>, <span class="string">&#x27;idt_B&#x27;</span>]</span><br><span class="line">        <span class="comment"># specify the images you want to save/display. The training/test scripts will call &lt;BaseModel.get_current_visuals&gt;</span></span><br><span class="line">        visual_names_A = [<span class="string">&#x27;real_A&#x27;</span>, <span class="string">&#x27;fake_B&#x27;</span>, <span class="string">&#x27;rec_A&#x27;</span>]</span><br><span class="line">        visual_names_B = [<span class="string">&#x27;real_B&#x27;</span>, <span class="string">&#x27;fake_A&#x27;</span>, <span class="string">&#x27;rec_B&#x27;</span>]</span><br><span class="line">        <span class="keyword">if</span> self.isTrain <span class="keyword">and</span> self.opt.lambda_identity &gt; <span class="number">0.0</span>:  <span class="comment"># if identity loss is used, we also visualize idt_B=G_A(B) ad idt_A=G_A(B)</span></span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;!!!!!!!!! use identity loss&quot;</span>)</span><br><span class="line">            visual_names_A.append(<span class="string">&#x27;idt_B&#x27;</span>)</span><br><span class="line">            visual_names_B.append(<span class="string">&#x27;idt_A&#x27;</span>)</span><br><span class="line"></span><br><span class="line">        self.visual_names = visual_names_A + visual_names_B  <span class="comment"># combine visualizations for A and B</span></span><br><span class="line">        <span class="comment"># specify the models you want to save to the disk. The training/test scripts will call &lt;BaseModel.save_networks&gt; and &lt;BaseModel.load_networks&gt;.</span></span><br><span class="line">        <span class="keyword">if</span> self.isTrain:</span><br><span class="line">            self.model_names = [<span class="string">&#x27;G_A&#x27;</span>, <span class="string">&#x27;G_B&#x27;</span>, <span class="string">&#x27;D_A&#x27;</span>, <span class="string">&#x27;D_B&#x27;</span>]</span><br><span class="line">        <span class="keyword">else</span>:  <span class="comment"># during test time, only load Gs</span></span><br><span class="line">            self.model_names = [<span class="string">&#x27;G_A&#x27;</span>, <span class="string">&#x27;G_B&#x27;</span>]</span><br><span class="line"></span><br><span class="line">        <span class="comment"># define networks (both Generators and discriminators)</span></span><br><span class="line">        <span class="comment"># The naming is different from those used in the paper.</span></span><br><span class="line">        <span class="comment"># Code (vs. paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)</span></span><br><span class="line">        self.netG_A = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,</span><br><span class="line">                                        <span class="keyword">not</span> opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)</span><br><span class="line">        self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, opt.netG, opt.norm,</span><br><span class="line">                                        <span class="keyword">not</span> opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> self.isTrain:  <span class="comment"># define discriminators</span></span><br><span class="line">            self.netD_A = networks.define_D(opt.output_nc, opt.ndf, opt.netD,</span><br><span class="line">                                            opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)</span><br><span class="line">            self.netD_B = networks.define_D(opt.input_nc, opt.ndf, opt.netD,</span><br><span class="line">                                            opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> self.isTrain:</span><br><span class="line">            <span class="keyword">if</span> opt.lambda_identity &gt; <span class="number">0.0</span>:  <span class="comment"># only works when input and output images have the same number of channels</span></span><br><span class="line">                <span class="keyword">assert</span>(opt.input_nc == opt.output_nc)</span><br><span class="line">            self.fake_A_pool = ImagePool(opt.pool_size)  <span class="comment"># create image buffer to store previously generated images</span></span><br><span class="line">            self.fake_B_pool = ImagePool(opt.pool_size)  <span class="comment"># create image buffer to store previously generated images</span></span><br><span class="line">            <span class="comment"># define loss functions</span></span><br><span class="line">            self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)  <span class="comment"># define GAN loss.</span></span><br><span class="line">            self.criterionCycle = torch.nn.L1Loss()</span><br><span class="line">            self.criterionIdt = torch.nn.L1Loss()</span><br><span class="line">            <span class="comment"># initialize optimizers; schedulers will be automatically created by function &lt;BaseModel.setup&gt;.</span></span><br><span class="line">            self.optimizer_G = torch.optim.Adam(itertools.chain(self.netG_A.parameters(), self.netG_B.parameters()), lr=opt.lr, betas=(opt.beta1, <span class="number">0.999</span>))</span><br><span class="line">            self.optimizer_D = torch.optim.Adam(itertools.chain(self.netD_A.parameters(), self.netD_B.parameters()), lr=opt.lr, betas=(opt.beta1, <span class="number">0.999</span>))</span><br><span class="line">            self.optimizers.append(self.optimizer_G)</span><br><span class="line">            self.optimizers.append(self.optimizer_D)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">set_input</span>(<span class="params">self, <span class="built_in">input</span></span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Unpack input data from the dataloader and perform necessary pre-processing steps.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Parameters:</span></span><br><span class="line"><span class="string">            input (dict): include the data itself and its metadata information.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        The option &#x27;direction&#x27; can be used to swap domain A and domain B.</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        AtoB = self.opt.direction == <span class="string">&#x27;AtoB&#x27;</span></span><br><span class="line">        self.real_A = <span class="built_in">input</span>[<span class="string">&#x27;A&#x27;</span> <span class="keyword">if</span> AtoB <span class="keyword">else</span> <span class="string">&#x27;B&#x27;</span>].to(self.device)</span><br><span class="line">        self.real_B = <span class="built_in">input</span>[<span class="string">&#x27;B&#x27;</span> <span class="keyword">if</span> AtoB <span class="keyword">else</span> <span class="string">&#x27;A&#x27;</span>].to(self.device)</span><br><span class="line">        self.image_paths = <span class="built_in">input</span>[<span class="string">&#x27;A_paths&#x27;</span> <span class="keyword">if</span> AtoB <span class="keyword">else</span> <span class="string">&#x27;B_paths&#x27;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Run forward pass; called by both functions &lt;optimize_parameters&gt; and &lt;test&gt;.&quot;&quot;&quot;</span></span><br><span class="line">        self.fake_B = self.netG_A(self.real_A)  <span class="comment"># G_A(A)</span></span><br><span class="line">        self.rec_A = self.netG_B(self.fake_B)   <span class="comment"># G_B(G_A(A))</span></span><br><span class="line">        self.fake_A = self.netG_B(self.real_B)  <span class="comment"># G_B(B)</span></span><br><span class="line">        self.rec_B = self.netG_A(self.fake_A)   <span class="comment"># G_A(G_B(B))</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">backward_D_basic</span>(<span class="params">self, netD, real, fake</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Calculate GAN loss for the discriminator</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Parameters:</span></span><br><span class="line"><span class="string">            netD (network)      -- the discriminator D</span></span><br><span class="line"><span class="string">            real (tensor array) -- real images</span></span><br><span class="line"><span class="string">            fake (tensor array) -- images generated by a generator</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Return the discriminator loss.</span></span><br><span class="line"><span class="string">        We also call loss_D.backward() to calculate the gradients.</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        <span class="comment"># Real</span></span><br><span class="line">        pred_real = netD(real)</span><br><span class="line">        loss_D_real = self.criterionGAN(pred_real, <span class="literal">True</span>)</span><br><span class="line">        <span class="comment"># Fake</span></span><br><span class="line">        pred_fake = netD(fake.detach())</span><br><span class="line">        loss_D_fake = self.criterionGAN(pred_fake, <span class="literal">False</span>)</span><br><span class="line">        <span class="comment"># Combined loss and calculate gradients</span></span><br><span class="line">        loss_D = (loss_D_real + loss_D_fake) * <span class="number">0.5</span></span><br><span class="line">        loss_D.backward()</span><br><span class="line">        <span class="keyword">return</span> loss_D</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">backward_D_A</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Calculate GAN loss for discriminator D_A&quot;&quot;&quot;</span></span><br><span class="line">        fake_B = self.fake_B_pool.query(self.fake_B)</span><br><span class="line">        self.loss_D_A = self.backward_D_basic(self.netD_A, self.real_B, fake_B)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">backward_D_B</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Calculate GAN loss for discriminator D_B&quot;&quot;&quot;</span></span><br><span class="line">        fake_A = self.fake_A_pool.query(self.fake_A)</span><br><span class="line">        self.loss_D_B = self.backward_D_basic(self.netD_B, self.real_A, fake_A)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">backward_G</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Calculate the loss for generators G_A and G_B&quot;&quot;&quot;</span></span><br><span class="line">        lambda_idt = self.opt.lambda_identity</span><br><span class="line">        lambda_A = self.opt.lambda_A</span><br><span class="line">        lambda_B = self.opt.lambda_B</span><br><span class="line">        <span class="comment"># Identity loss</span></span><br><span class="line">        <span class="keyword">if</span> lambda_idt &gt; <span class="number">0</span>:</span><br><span class="line">            <span class="comment"># G_A should be identity if real_B is fed: ||G_A(B) - B||</span></span><br><span class="line">            self.idt_A = self.netG_A(self.real_B)</span><br><span class="line">            self.loss_idt_A = self.criterionIdt(self.idt_A, self.real_B) * lambda_B * lambda_idt</span><br><span class="line">            <span class="comment"># G_B should be identity if real_A is fed: ||G_B(A) - A||</span></span><br><span class="line">            self.idt_B = self.netG_B(self.real_A)</span><br><span class="line">            self.loss_idt_B = self.criterionIdt(self.idt_B, self.real_A) * lambda_A * lambda_idt</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            self.loss_idt_A = <span class="number">0</span></span><br><span class="line">            self.loss_idt_B = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># GAN loss D_A(G_A(A))</span></span><br><span class="line">        self.loss_G_A = self.criterionGAN(self.netD_A(self.fake_B), <span class="literal">True</span>)</span><br><span class="line">        <span class="comment"># GAN loss D_B(G_B(B))</span></span><br><span class="line">        self.loss_G_B = self.criterionGAN(self.netD_B(self.fake_A), <span class="literal">True</span>)</span><br><span class="line">        <span class="comment"># Forward cycle loss || G_B(G_A(A)) - A||</span></span><br><span class="line">        self.loss_cycle_A = self.criterionCycle(self.rec_A, self.real_A) * lambda_A</span><br><span class="line">        <span class="comment"># Backward cycle loss || G_A(G_B(B)) - B||</span></span><br><span class="line">        self.loss_cycle_B = self.criterionCycle(self.rec_B, self.real_B) * lambda_B</span><br><span class="line">        <span class="comment"># combined loss and calculate gradients</span></span><br><span class="line">        self.loss_G = self.loss_G_A + self.loss_G_B + self.loss_cycle_A + self.loss_cycle_B + self.loss_idt_A + self.loss_idt_B</span><br><span class="line">        self.loss_G.backward()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">optimize_parameters</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;Calculate losses, gradients, and update network weights; called in every training iteration&quot;&quot;&quot;</span></span><br><span class="line">        <span class="comment"># forward</span></span><br><span class="line">        self.forward()      <span class="comment"># compute fake images and reconstruction images.</span></span><br><span class="line">        <span class="comment"># G_A and G_B</span></span><br><span class="line">        self.set_requires_grad([self.netD_A, self.netD_B], <span class="literal">False</span>)  <span class="comment"># Ds require no gradients when optimizing Gs</span></span><br><span class="line">        self.optimizer_G.zero_grad()  <span class="comment"># set G_A and G_B&#x27;s gradients to zero</span></span><br><span class="line">        self.backward_G()             <span class="comment"># calculate gradients for G_A and G_B</span></span><br><span class="line">        self.optimizer_G.step()       <span class="comment"># update G_A and G_B&#x27;s weights</span></span><br><span class="line">        <span class="comment"># D_A and D_B</span></span><br><span class="line">        self.set_requires_grad([self.netD_A, self.netD_B], <span class="literal">True</span>)</span><br><span class="line">        self.optimizer_D.zero_grad()   <span class="comment"># set D_A and D_B&#x27;s gradients to zero</span></span><br><span class="line">        self.backward_D_A()      <span class="comment"># calculate gradients for D_A</span></span><br><span class="line">        self.backward_D_B()      <span class="comment"># calculate graidents for D_B</span></span><br><span class="line">        self.optimizer_D.step()  <span class="comment"># update D_A and D_B&#x27;s weights</span></span><br></pre></td></tr></table></figure>
+<p>从forward函数，init函数和optimize_parameters函数进行分析。<br>init函数初始化一些变量，forward函数构建pipeline，具体需要清楚个命名代表什么。<br>real_A –&gt; netG_A –&gt; fake_B –&gt; netG_B –&gt; rec_A<br>real_B –&gt; netG_B –&gt; fake_A –&gt; netG_A –&gt; rec_B<br>每个epoch调用的是 optimize_parameters。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> epoch <span class="keyword">in</span> <span class="built_in">range</span>(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + <span class="number">1</span>): </span><br><span class="line">    <span class="keyword">for</span> i, data <span class="keyword">in</span> <span class="built_in">enumerate</span>(dataset):  <span class="comment"># inner loop within one epoch</span></span><br><span class="line">        model.set_input(data)         <span class="comment"># unpack data from dataset and apply preprocessing</span></span><br><span class="line">        model.optimize_parameters()   <span class="comment"># calculate loss functions, get gradients, update network weights</span></span><br></pre></td></tr></table></figure>
+<p>关于生成器和判别器是如何搭建的，如无深入研究，建议直接看论文。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/02/01/cycleGAN%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/" data-id="clky8whyz0001hcu59cjm74xi" data-title="cycleGAN代码分析" class="article-share-link">Share</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/02/22/%E7%9B%B8%E6%9C%BA%E5%9D%90%E6%A0%87-%E4%B8%96%E7%95%8C%E5%9D%90%E6%A0%87%E8%BD%AC%E6%8D%A2/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          相机坐标_世界坐标转换
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/01/17/CRF%E6%80%BB%E7%BB%93/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">CRF总结</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/08/05/%E5%9F%BA%E4%BA%8Epython%E5%8F%8Ac-%E7%9A%84%E6%B5%B7%E5%BA%B7%E6%91%84%E5%83%8F%E5%A4%B4%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91/">基于python及c++的海康摄像头二次开发</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/21/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%BE%AA%E7%8E%AF%E9%98%9F%E5%88%97/">基于python的循环队列</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/19/pytorch%E5%8F%8A%E5%85%B6%E4%BB%96%E4%B8%80%E4%BA%9B%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0python%E5%BA%93%E4%BB%8B%E7%BB%8D/">pytorch及其他一些深度学习python库介绍</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/07/m3u8%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD/">m3u8视频下载</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/06/diffusion-model/">diffusion_model</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 sunzx<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

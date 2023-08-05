@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>diffusion_model | sunzx&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="原论文：Denoising Diffusion Probabilistic Models以下讲解整个扩散模型流程，不讲解数学推导。diffusion model是一种生成模型，通常使用一个正向的扩散过程和一个反向的逆扩散过程解释其原理。  正向的扩散过程通过添加高斯噪声实现。 通过马尔可夫链，经过推导有  其中  反向过程定义为  根据马尔可夫链及相关推导有  因为有  所以上式u_t可以简化为">
+<meta property="og:type" content="article">
+<meta property="og:title" content="diffusion_model">
+<meta property="og:url" content="http://example.com/2023/03/06/diffusion-model/index.html">
+<meta property="og:site_name" content="sunzx&#39;s blog">
+<meta property="og:description" content="原论文：Denoising Diffusion Probabilistic Models以下讲解整个扩散模型流程，不讲解数学推导。diffusion model是一种生成模型，通常使用一个正向的扩散过程和一个反向的逆扩散过程解释其原理。  正向的扩散过程通过添加高斯噪声实现。 通过马尔可夫链，经过推导有  其中  反向过程定义为  根据马尔可夫链及相关推导有  因为有  所以上式u_t可以简化为">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/diffusion_model_pri.png">
+<meta property="og:image" content="http://example.com/images/diffusion_model_q.png">
+<meta property="og:image" content="http://example.com/images/diffusion_model_q2.png">
+<meta property="og:image" content="http://example.com/images/diffusion_model_q3.png">
+<meta property="og:image" content="http://example.com/images/diffusion_model_p.png">
+<meta property="og:image" content="http://example.com/images/diffusion_model_q5.png">
+<meta property="og:image" content="http://example.com/images/diffusion_model_xt.png">
+<meta property="og:image" content="http://example.com/images/diffusion_model_ut.png">
+<meta property="og:image" content="http://example.com/images/diffusion_model_loss.png">
+<meta property="og:image" content="http://example.com/images/diffusion_model_loss2.png">
+<meta property="og:image" content="http://example.com/images/diffusion_model_loss3.png">
+<meta property="og:image" content="http://example.com/images/diffusion_model.webp">
+<meta property="article:published_time" content="2023-03-06T14:54:47.000Z">
+<meta property="article:modified_time" content="2023-03-09T15:04:09.136Z">
+<meta property="article:author" content="sunzx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/diffusion_model_pri.png">
+  
+    <link rel="alternate" href="/atom.xml" title="sunzx's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">sunzx&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-diffusion-model" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2023/03/06/diffusion-model/" class="article-date">
+  <time class="dt-published" datetime="2023-03-06T14:54:47.000Z" itemprop="datePublished">2023-03-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      diffusion_model
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>原论文：Denoising Diffusion Probabilistic Models<br>以下讲解整个扩散模型流程，不讲解数学推导。<br>diffusion model是一种生成模型，通常使用一个正向的扩散过程和一个反向的逆扩散过程解释其原理。</p>
+<p><img src="/../images/diffusion_model_pri.png"></p>
+<p>正向的扩散过程通过添加高斯噪声实现。</p>
+<p><img src="/../images/diffusion_model_q.png"><br>通过马尔可夫链，经过推导有</p>
+<p><img src="/../images/diffusion_model_q2.png"></p>
+<p>其中</p>
+<p><img src="/../images/diffusion_model_q3.png"></p>
+<p>反向过程定义为</p>
+<p><img src="/../images/diffusion_model_p.png"></p>
+<p>根据马尔可夫链及相关推导有</p>
+<p><img src="/../images/diffusion_model_q5.png"></p>
+<p>因为有</p>
+<p><img src="/../images/diffusion_model_xt.png"></p>
+<p>所以上式u_t可以简化为</p>
+<p><img src="/../images/diffusion_model_ut.png"></p>
+<p>注意以上关于u_t的两种写法都可以，两种写法我在代码中都见过。</p>
+<p>loss函数为</p>
+<p><img src="/../images/diffusion_model_loss.png"></p>
+<p>最终需要优化的损失函数为</p>
+<p><img src="/../images/diffusion_model_loss2.png"></p>
+<p>这个时候根据不同建模会得到不同的损失函数，如论文是让网络去学习那个正向过程高斯采样的噪音，得到最终的损失函数表达式为</p>
+<p><img src="/../images/diffusion_model_loss3.png"></p>
+<p>下面结合代码了解各个超参数应用在什么地方, 下面的代码是拟合一个s型曲线，是二维分布。从diffusion model的loss可以知道其是针对点做的损失函数，刚开始我挺迷的这样不丢失了图像的结构信息了嘛，但是后来突然感悟图像的结构信息就蕴藏在要学习的网络中，网络用的是卷积网络呀，都是结合了图像结构信息而学到的参数。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># %matplotlib inline</span></span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> make_s_curve</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"></span><br><span class="line">s_curve,_ = make_s_curve(<span class="number">10</span>**<span class="number">4</span>,noise=<span class="number">0.1</span>)</span><br><span class="line">s_curve = s_curve[:,[<span class="number">0</span>,<span class="number">2</span>]]/<span class="number">10.0</span> <span class="comment"># (10000, 2)</span></span><br><span class="line"></span><br><span class="line">data = s_curve.T</span><br><span class="line"></span><br><span class="line">fig,ax = plt.subplots()</span><br><span class="line">ax.scatter(*data,color=<span class="string">&#x27;blue&#x27;</span>,edgecolor=<span class="string">&#x27;white&#x27;</span>);</span><br><span class="line"></span><br><span class="line">ax.axis(<span class="string">&#x27;off&#x27;</span>)</span><br><span class="line"></span><br><span class="line">dataset = torch.Tensor(s_curve).<span class="built_in">float</span>()  <span class="comment">#(10000, 2)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 确定超参数的值</span></span><br><span class="line">num_steps = <span class="number">100</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#制定每一步的beta</span></span><br><span class="line">betas = torch.linspace(-<span class="number">6</span>,<span class="number">6</span>,num_steps)</span><br><span class="line">betas = torch.sigmoid(betas)*(<span class="number">0.5e-2</span> - <span class="number">1e-5</span>)+<span class="number">1e-5</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#计算alpha、alpha_prod、alpha_prod_previous、alpha_bar_sqrt等变量的值</span></span><br><span class="line">alphas = <span class="number">1</span>-betas</span><br><span class="line">alphas_prod = torch.cumprod(alphas,<span class="number">0</span>)</span><br><span class="line">alphas_prod_p = torch.cat([torch.tensor([<span class="number">1</span>]).<span class="built_in">float</span>(),alphas_prod[:-<span class="number">1</span>]],<span class="number">0</span>)</span><br><span class="line">alphas_bar_sqrt = torch.sqrt(alphas_prod)</span><br><span class="line">one_minus_alphas_bar_log = torch.log(<span class="number">1</span> - alphas_prod)</span><br><span class="line">one_minus_alphas_bar_sqrt = torch.sqrt(<span class="number">1</span> - alphas_prod)</span><br><span class="line"></span><br><span class="line"><span class="keyword">assert</span> alphas.shape==alphas_prod.shape==alphas_prod_p.shape==\</span><br><span class="line">alphas_bar_sqrt.shape==one_minus_alphas_bar_log.shape\</span><br><span class="line">==one_minus_alphas_bar_sqrt.shape</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;all the same shape&quot;</span>,betas.shape) <span class="comment"># (100)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 确定扩散过程任意时刻的采样值</span></span><br><span class="line"><span class="comment">#计算任意时刻的x采样值，基于x_0和重参数化</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">q_x</span>(<span class="params">x_0,t</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;可以基于x[0]得到任意时刻t的x[t]&quot;&quot;&quot;</span></span><br><span class="line">    noise = torch.randn_like(x_0)</span><br><span class="line">    alphas_t = alphas_bar_sqrt[t]</span><br><span class="line">    alphas_1_m_t = one_minus_alphas_bar_sqrt[t]</span><br><span class="line">    <span class="keyword">return</span> (alphas_t * x_0 + alphas_1_m_t * noise)<span class="comment">#在x[0]的基础上添加噪声</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 演示原始数据分布加噪100步后的结果</span></span><br><span class="line">num_shows = <span class="number">20</span></span><br><span class="line">fig,axs = plt.subplots(<span class="number">2</span>,<span class="number">10</span>,figsize=(<span class="number">28</span>,<span class="number">3</span>))</span><br><span class="line">plt.rc(<span class="string">&#x27;text&#x27;</span>,color=<span class="string">&#x27;black&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">#共有10000个点，每个点包含两个坐标</span></span><br><span class="line"><span class="comment">#生成100步以内每隔5步加噪声后的图像</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(num_shows):</span><br><span class="line">    j = i//<span class="number">10</span></span><br><span class="line">    k = i%<span class="number">10</span></span><br><span class="line">    q_i = q_x(dataset,torch.tensor([i*num_steps//num_shows]))<span class="comment">#生成t时刻的采样数据</span></span><br><span class="line">    axs[j,k].scatter(q_i[:,<span class="number">0</span>],q_i[:,<span class="number">1</span>],color=<span class="string">&#x27;red&#x27;</span>,edgecolor=<span class="string">&#x27;white&#x27;</span>)</span><br><span class="line">    axs[j,k].set_axis_off()</span><br><span class="line">    axs[j,k].set_title(<span class="string">&#x27;$q(\mathbf&#123;x&#125;_&#123;&#x27;</span>+<span class="built_in">str</span>(i*num_steps//num_shows)+<span class="string">&#x27;&#125;)$&#x27;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 编写拟合逆扩散过程高斯分布的模型</span></span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MLPDiffusion</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, n_steps, num_units=<span class="number">128</span></span>):</span><br><span class="line">        <span class="built_in">super</span>(MLPDiffusion, self).__init__()</span><br><span class="line"></span><br><span class="line">        self.linears = nn.ModuleList(</span><br><span class="line">            [</span><br><span class="line">                nn.Linear(<span class="number">2</span>, num_units),</span><br><span class="line">                nn.ReLU(),</span><br><span class="line">                nn.Linear(num_units, num_units),</span><br><span class="line">                nn.ReLU(),</span><br><span class="line">                nn.Linear(num_units, num_units),</span><br><span class="line">                nn.ReLU(),</span><br><span class="line">                nn.Linear(num_units, <span class="number">2</span>),</span><br><span class="line">            ]</span><br><span class="line">        )</span><br><span class="line">        self.step_embeddings = nn.ModuleList(</span><br><span class="line">            [</span><br><span class="line">                nn.Embedding(n_steps, num_units),</span><br><span class="line">                nn.Embedding(n_steps, num_units),</span><br><span class="line">                nn.Embedding(n_steps, num_units),</span><br><span class="line">            ]</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x, t</span>):</span><br><span class="line">        <span class="comment">#         x = x_0</span></span><br><span class="line">        <span class="keyword">for</span> idx, embedding_layer <span class="keyword">in</span> <span class="built_in">enumerate</span>(self.step_embeddings):</span><br><span class="line">            t_embedding = embedding_layer(t)</span><br><span class="line">            x = self.linears[<span class="number">2</span> * idx](x)</span><br><span class="line">            x += t_embedding</span><br><span class="line">            x = self.linears[<span class="number">2</span> * idx + <span class="number">1</span>](x)</span><br><span class="line"></span><br><span class="line">        x = self.linears[-<span class="number">1</span>](x)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> x</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 编写训练的误差函数</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">diffusion_loss_fn</span>(<span class="params">model, x_0, alphas_bar_sqrt, one_minus_alphas_bar_sqrt, n_steps</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;对任意时刻t进行采样计算loss&quot;&quot;&quot;</span></span><br><span class="line">    batch_size = x_0.shape[<span class="number">0</span>]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 对一个batchsize样本生成随机的时刻t</span></span><br><span class="line">    t = torch.randint(<span class="number">0</span>, n_steps, size=(batch_size // <span class="number">2</span>,))</span><br><span class="line">    t = torch.cat([t, n_steps - <span class="number">1</span> - t], dim=<span class="number">0</span>)</span><br><span class="line">    t = t.unsqueeze(-<span class="number">1</span>) <span class="comment">#(batch_size, 1)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># x0的系数</span></span><br><span class="line">    a = alphas_bar_sqrt[t]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># eps的系数</span></span><br><span class="line">    aml = one_minus_alphas_bar_sqrt[t]</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 生成随机噪音eps</span></span><br><span class="line">    e = torch.randn_like(x_0) <span class="comment"># (batch_size, 2)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 构造模型的输入</span></span><br><span class="line">    x = x_0 * a + e * aml</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 送入模型，得到t时刻的随机噪声预测值</span></span><br><span class="line">    output = model(x, t.squeeze(-<span class="number">1</span>))</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 与真实噪声一起计算误差，求平均值</span></span><br><span class="line">    <span class="keyword">return</span> (e - output).square().mean()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 编写逆扩散采样函数（inference）</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">p_sample_loop</span>(<span class="params">model, shape, n_steps, betas, one_minus_alphas_bar_sqrt</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;从x[T]恢复x[T-1]、x[T-2]|...x[0]&quot;&quot;&quot;</span></span><br><span class="line">    cur_x = torch.randn(shape) <span class="comment"># (1000, 2)</span></span><br><span class="line">    x_seq = [cur_x]</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">reversed</span>(<span class="built_in">range</span>(n_steps)):</span><br><span class="line">        cur_x = p_sample(model, cur_x, i, betas, one_minus_alphas_bar_sqrt)</span><br><span class="line">        x_seq.append(cur_x)</span><br><span class="line">    <span class="keyword">return</span> x_seq</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">p_sample</span>(<span class="params">model, x, t, betas, one_minus_alphas_bar_sqrt</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;从x[T]采样t时刻的重构值&quot;&quot;&quot;</span></span><br><span class="line">    t = torch.tensor([t])</span><br><span class="line"></span><br><span class="line">    coeff = betas[t] / one_minus_alphas_bar_sqrt[t]</span><br><span class="line"></span><br><span class="line">    eps_theta = model(x, t)</span><br><span class="line"></span><br><span class="line">    mean = (<span class="number">1</span> / (<span class="number">1</span> - betas[t]).sqrt()) * (x - (coeff * eps_theta))</span><br><span class="line"></span><br><span class="line">    z = torch.randn_like(x) <span class="comment"># (1000, 2)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 这里用的论文中提到的 betas[t]，也可以用注释部分，但是需要该一下函数，把参数传进来</span></span><br><span class="line"></span><br><span class="line">    sigma_t = betas[t].sqrt()</span><br><span class="line"></span><br><span class="line">    <span class="comment"># sigma_t = betas[t]* (1 - alphas_prod_p[t]) / (1 - alphas_prod[t])</span></span><br><span class="line"></span><br><span class="line">    sample = mean + sigma_t * z</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (sample)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 开始训练模型，打印loss及中间重构效果</span></span><br><span class="line">seed = <span class="number">1234</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 这个类好像没用到呀！</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">EMA</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot;构建一个参数平滑器&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, mu=<span class="number">0.01</span></span>):</span><br><span class="line">        self.mu = mu</span><br><span class="line">        self.shadow = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">register</span>(<span class="params">self, name, val</span>):</span><br><span class="line">        self.shadow[name] = val.clone()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__call__</span>(<span class="params">self, name, x</span>):</span><br><span class="line">        <span class="keyword">assert</span> name <span class="keyword">in</span> self.shadow</span><br><span class="line">        new_average = self.mu * x + (<span class="number">1.0</span> - self.mu) * self.shadow[name]</span><br><span class="line">        self.shadow[name] = new_average.clone()</span><br><span class="line">        <span class="keyword">return</span> new_average</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;Training model...&#x27;</span>)</span><br><span class="line">batch_size = <span class="number">128</span></span><br><span class="line">dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=<span class="literal">True</span>)</span><br><span class="line">num_epoch = <span class="number">4000</span></span><br><span class="line">plt.rc(<span class="string">&#x27;text&#x27;</span>, color=<span class="string">&#x27;blue&#x27;</span>)</span><br><span class="line"></span><br><span class="line">model = MLPDiffusion(num_steps)  <span class="comment"># 输出维度是2，输入是x和step</span></span><br><span class="line">optimizer = torch.optim.Adam(model.parameters(), lr=<span class="number">1e-3</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> t <span class="keyword">in</span> <span class="built_in">range</span>(num_epoch):</span><br><span class="line">    <span class="keyword">for</span> idx, batch_x <span class="keyword">in</span> <span class="built_in">enumerate</span>(dataloader):</span><br><span class="line">        loss = diffusion_loss_fn(model, batch_x, alphas_bar_sqrt, one_minus_alphas_bar_sqrt, num_steps)</span><br><span class="line">        optimizer.zero_grad()</span><br><span class="line">        loss.backward()</span><br><span class="line">        torch.nn.utils.clip_grad_norm_(model.parameters(), <span class="number">1.</span>)</span><br><span class="line">        optimizer.step()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (t % <span class="number">100</span> == <span class="number">0</span>):</span><br><span class="line">        <span class="built_in">print</span>(loss)</span><br><span class="line">        x_seq = p_sample_loop(model, dataset.shape, num_steps, betas, one_minus_alphas_bar_sqrt)</span><br><span class="line"></span><br><span class="line">        fig, axs = plt.subplots(<span class="number">1</span>, <span class="number">10</span>, figsize=(<span class="number">28</span>, <span class="number">3</span>))</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="number">11</span>):</span><br><span class="line">            cur_x = x_seq[i * <span class="number">10</span>].detach()</span><br><span class="line">            axs[i - <span class="number">1</span>].scatter(cur_x[:, <span class="number">0</span>], cur_x[:, <span class="number">1</span>], color=<span class="string">&#x27;red&#x27;</span>, edgecolor=<span class="string">&#x27;white&#x27;</span>);</span><br><span class="line">            axs[i - <span class="number">1</span>].set_axis_off();</span><br><span class="line">            axs[i - <span class="number">1</span>].set_title(<span class="string">&#x27;$q(\mathbf&#123;x&#125;_&#123;&#x27;</span> + <span class="built_in">str</span>(i * <span class="number">10</span>) + <span class="string">&#x27;&#125;)$&#x27;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 动画演示扩散过程和逆扩散过程</span></span><br><span class="line"><span class="keyword">import</span> io</span><br><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image</span><br><span class="line"></span><br><span class="line">imgs = []</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">100</span>):</span><br><span class="line">    plt.clf()</span><br><span class="line">    q_i = q_x(dataset, torch.tensor([i]))</span><br><span class="line">    plt.scatter(q_i[:, <span class="number">0</span>], q_i[:, <span class="number">1</span>], color=<span class="string">&#x27;red&#x27;</span>, edgecolor=<span class="string">&#x27;white&#x27;</span>, s=<span class="number">5</span>);</span><br><span class="line">    plt.axis(<span class="string">&#x27;off&#x27;</span>);</span><br><span class="line"></span><br><span class="line">    img_buf = io.BytesIO()</span><br><span class="line">    plt.savefig(img_buf, <span class="built_in">format</span>=<span class="string">&#x27;png&#x27;</span>)</span><br><span class="line">    img = Image.<span class="built_in">open</span>(img_buf)</span><br><span class="line">    imgs.append(img)</span><br><span class="line"></span><br><span class="line">reverse = []</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">100</span>):</span><br><span class="line">    plt.clf()</span><br><span class="line">    cur_x = x_seq[i].detach()</span><br><span class="line">    plt.scatter(cur_x[:, <span class="number">0</span>], cur_x[:, <span class="number">1</span>], color=<span class="string">&#x27;red&#x27;</span>, edgecolor=<span class="string">&#x27;white&#x27;</span>, s=<span class="number">5</span>);</span><br><span class="line">    plt.axis(<span class="string">&#x27;off&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    img_buf = io.BytesIO()</span><br><span class="line">    plt.savefig(img_buf, <span class="built_in">format</span>=<span class="string">&#x27;png&#x27;</span>)</span><br><span class="line">    img = Image.<span class="built_in">open</span>(img_buf)</span><br><span class="line">    reverse.append(img)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">imgs = imgs +reverse</span><br><span class="line">imgs[<span class="number">0</span>].save(<span class="string">&quot;diffusion.gif&quot;</span>,<span class="built_in">format</span>=<span class="string">&#x27;GIF&#x27;</span>,append_images=imgs,save_all=<span class="literal">True</span>,duration=<span class="number">100</span>,loop=<span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+<p>参考资料</p>
+<p><img src="/../images/diffusion_model.webp"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2023/03/06/diffusion-model/" data-id="clky8whz20004hcu53vf59ppr" data-title="diffusion_model" class="article-share-link">Share</a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/04/07/m3u8%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          m3u8视频下载
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/02/22/%E7%9B%B8%E6%9C%BA%E5%9D%90%E6%A0%87-%E4%B8%96%E7%95%8C%E5%9D%90%E6%A0%87%E8%BD%AC%E6%8D%A2/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">相机坐标_世界坐标转换</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">August 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">June 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">April 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/01/">January 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/08/05/%E5%9F%BA%E4%BA%8Epython%E5%8F%8Ac-%E7%9A%84%E6%B5%B7%E5%BA%B7%E6%91%84%E5%83%8F%E5%A4%B4%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91/">基于python及c++的海康摄像头二次开发</a>
+          </li>
+        
+          <li>
+            <a href="/2023/06/21/%E5%9F%BA%E4%BA%8Epython%E7%9A%84%E5%BE%AA%E7%8E%AF%E9%98%9F%E5%88%97/">基于python的循环队列</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/19/pytorch%E5%8F%8A%E5%85%B6%E4%BB%96%E4%B8%80%E4%BA%9B%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0python%E5%BA%93%E4%BB%8B%E7%BB%8D/">pytorch及其他一些深度学习python库介绍</a>
+          </li>
+        
+          <li>
+            <a href="/2023/04/07/m3u8%E8%A7%86%E9%A2%91%E4%B8%8B%E8%BD%BD/">m3u8视频下载</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/06/diffusion-model/">diffusion_model</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2023 sunzx<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
